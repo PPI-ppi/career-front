@@ -1,0 +1,753 @@
+<template>
+  <div class="personal-center">
+    <aside class="sidebar">
+      <div class="avatar-placeholder">
+        <el-avatar :size="80" :src="avatarUrl" />
+      </div>
+     <el-menu :default-active="activeTab" class="menu" @select="handleMenuSelect">
+      <el-menu-item index="info">
+        <el-icon><User /></el-icon>
+        <span>个人信息</span>
+      </el-menu-item>
+      <el-menu-item index="report">
+        <el-icon><DataAnalysis /></el-icon>
+        <span>AI 职业分析</span>
+      </el-menu-item>
+      <el-menu-item index="growth">
+        <el-icon><TrendCharts /></el-icon>
+        <span>成长追踪中心</span>
+      </el-menu-item>
+      <el-menu-item index="report-export">
+        <el-icon><DocumentCopy /></el-icon>
+        <span>报告优化与导出</span>
+      </el-menu-item>
+      <el-menu-item index="favorite">
+        <el-icon><Star /></el-icon>
+        <span>目标岗位</span>
+      </el-menu-item>
+    </el-menu>
+    </aside>
+
+    <main class="main-content">
+      <div class="content-wrapper">
+        
+        <template v-if="activeTab === 'info'">
+          <div v-if="!isInfoFilled" class="ai-chat-layout">
+            <div class="chat-dashboard-upper">
+              <section class="chat-section">
+                <div class="chat-header">
+                  <div class="header-left">
+                    <div class="status-indicator">
+                      <span class="pulse-dot"></span>
+                    </div>
+                    <div class="header-text">
+                      <h3 class="chat-title">AI 职业向导</h3>
+                      <span class="ai-status-desc">DeepSeek 大模型已连接</span>
+                    </div>
+                  </div>
+                    <div class="header-right">
+                      <el-tooltip effect="dark" content="已開啟最高精準度解析" placement="top">
+                        <el-tag size="small" class="ai-mode-tag">
+                          智能模式
+                        </el-tag>
+                      </el-tooltip>
+                    </div>
+                </div>
+
+                <div ref="messageListRef" class="message-list">
+                  <div v-for="msg in chatMessages" :key="msg.id" :class="['message-item', msg.role]">
+                    <div class="message-avatar">
+                      <div v-if="msg.role === 'assistant'" class="ai-icon">
+                        <el-icon><MagicStick /></el-icon>
+                      </div>
+                      <el-avatar v-else :size="36" src="https://ui-avatars.com/api/?name=User&background=667eea&color=fff" />
+                    </div>
+                    
+                    <div class="message-content-wrapper">
+                      <div class="message-bubble">
+                        {{ msg.content }}
+                      </div>
+                      <span class="message-time">刚刚</span>
+                    </div>
+                  </div>
+
+                  <div v-if="loading" class="message-item assistant">
+                    <div class="message-avatar">
+                      <div class="ai-icon spinning">
+                        <el-icon><Loading /></el-icon>
+                      </div>
+                    </div>
+                    <div class="message-content-wrapper">
+                      <div class="message-bubble loading-dots">
+                        <span></span><span></span><span></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="chat-input-area">
+                  <div class="input-container">
+                    <el-input
+                      v-model="inputValue"
+                      type="textarea"
+                      :rows="2"
+                      placeholder="在此粘贴简历内容..."
+                      resize="none"
+                      @keydown.enter.prevent="handleSend"
+                    />
+                    <div class="input-footer">
+                      <el-upload action="#" :auto-upload="false" :show-file-list="false">
+                        <el-button link icon="Upload">上传附件</el-button>
+                      </el-upload>
+                      
+                      <el-button 
+                        type="primary" 
+                        circle 
+                        icon="Promotion" 
+                        @click="handleSend" 
+                        class="send-btn"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section class="dashboard-preview-section">
+                <div class="artifact-card">
+                  <div class="artifact-header">
+                    <h4>实时画像预览</h4>
+                    <div class="sync-badge"><el-icon><Refresh /></el-icon> 实时同步中</div>
+                  </div>
+                  <div class="preview-radar-placeholder">
+                    <div class="placeholder-text">
+                      <el-icon :size="40"><Histogram /></el-icon>
+                      <p>九维能力雷达预览区</p>
+                    </div>
+                  </div>
+                  <p class="empty-preview-tip">输入更多经历以激活深度分析</p>
+                </div>
+              </section>
+            </div>
+
+            <div class="bottom-action-bar">
+              <el-button 
+                type="primary" 
+                class="analyze-btn" 
+                size="large"
+                @click="saveAndContinue"
+                :loading="loading"
+              >
+                <el-icon class="el-icon--left"><MagicStick /></el-icon>
+                保存并开始 AI 深度分析
+              </el-button>
+            </div>
+          </div>
+          <div v-else class="dashboard-result-view">
+             <PersonalInfo :user-info="userInfo" @re-edit="isInfoFilled = false" />
+          </div>
+        </template>
+
+        <div v-else-if="activeTab === 'report'" class="sub-page">
+          <AIReport />
+        </div>
+        <div v-else-if="activeTab === 'growth'" class="sub-page">
+          <GrowthTracker />
+        </div>
+        <div v-else-if="activeTab === 'report-export'" class="sub-page">
+          <PolishAndExport />
+        </div>
+        <div v-else-if="activeTab === 'favorite'" class="sub-page">
+          <FavoriteJobs />
+        </div>
+        
+      </div>
+    </main>
+  </div>
+</template>
+
+<script setup>
+import { ref, nextTick, computed } from 'vue'
+import { Refresh, Histogram, Upload } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+
+// 导入你的子组件
+import PersonalInfo from './PersonalInfo.vue'
+import AIReport from './AIReport.vue'
+import GrowthTracker from './GrowthTracker.vue'
+import PolishAndExport from './PolishAndExport.vue'
+import FavoriteJobs from './FavoriteJobs.vue'
+
+const activeTab = ref('info')
+const isInfoFilled = ref(false)
+const loading = ref(false)
+const inputValue = ref('')
+const messageListRef = ref(null)
+const avatarUrl = ref('https://ui-avatars.com/api/?name=User&size=120&background=409EFF&color=fff')
+
+const userInfo = ref({ name: '', email: '', rawResumeText: '', school: '' })
+
+const chatMessages = ref([
+  { id: 1, role: 'assistant', content: '您好！我是您的AI职业向导。您可以直接粘贴简历内容或上传文件。' }
+])
+
+const quickActions = [
+  { label: '📝 开始分析', command: '分析我的简历' },
+  { label: '🔍 检查完整度', command: '简历完整度检查' }
+]
+
+const progressValue = computed(() => userInfo.value.rawResumeText.length > 50 ? 85 : 10)
+
+// 🌟 修复核心：确保菜单选择逻辑能干净地切换 activeTab
+const handleMenuSelect = (index) => {
+  activeTab.value = index
+}
+
+const handleSend = async () => {
+  if (!inputValue.value.trim()) return
+  chatMessages.value.push({ id: Date.now(), role: 'user', content: inputValue.value })
+  userInfo.value.rawResumeText += inputValue.value
+  inputValue.value = ''
+  loading.value = true
+  await scrollToBottom()
+  setTimeout(async () => {
+    chatMessages.value.push({ id: Date.now(), role: 'assistant', content: '画像已实时更新。' })
+    loading.value = false
+    await scrollToBottom()
+  }, 1000)
+}
+
+const saveAndContinue = () => {
+  isInfoFilled.value = true
+  ElMessage.success('简历保存成功！')
+}
+
+const handleFileUpload = () => {
+  ElMessage.success('文件解析中...')
+}
+
+const handleQuickAction = (cmd) => {
+  inputValue.value = cmd
+  handleSend()
+}
+
+const scrollToBottom = async () => {
+  await nextTick()
+  if (messageListRef.value) messageListRef.value.scrollTop = messageListRef.value.scrollHeight
+}
+</script>
+
+<style scoped lang="scss">
+.personal-center {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* 侧边栏整体重构 */
+.sidebar {
+  width: 260px;
+  background: rgba(255, 255, 255, 0.4); /* 半透明背景 */
+  backdrop-filter: blur(20px); /* 毛玻璃效果 */
+  border-right: 1px solid rgba(255, 255, 255, 0.5);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+  z-index: 100;
+
+  .avatar-placeholder {
+    padding: 50px 0 30px;
+    text-align: center;
+    
+    .el-avatar {
+      box-shadow: 0 8px 16px rgba(118, 75, 162, 0.2);
+      border: 2px solid #fff;
+      transition: transform 0.3s ease;
+      &:hover {
+        transform: scale(1.05);
+      }
+    }
+  }
+
+  /* 菜单样式定制 */
+  .el-menu {
+    border: none;
+    background: transparent;
+    padding: 0 16px;
+
+    .el-menu-item {
+      height: 54px;
+      line-height: 54px;
+      margin-bottom: 8px;
+      border-radius: 12px;
+      color: #64748b;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+      span {
+        font-weight: 500;
+        margin-left: 8px;
+      }
+
+      /* 鼠标悬停 */
+      &:hover {
+        background: rgba(186, 211, 246, 0.318) !important;
+        color: #68788c;
+        transform: translateX(4px);
+      }
+
+      /* 激活状态 */
+      &.is-active {
+        background: linear-gradient(135deg, #bbd7f6a3 0%, #ffffffb6 100%) !important;
+        color: #221b4f !important;
+        box-shadow: 0 4px 12px rgba(75, 98, 162, 0.3);
+        
+        /* 激活时的图标/文字阴影 */
+        span {
+          font-weight: 600;
+        }
+      }
+    }
+  }
+}
+
+/* 找到 .chat-section 下的 .chat-header 样式进行替换 */
+.chat-header {
+  padding: 16px 24px; /* 增加内边距更显轻盈 */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.03); /* 极细的分割线 */
+  transition: all 0.3s ease;
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    /* 🌟 AI 状态指示器样式 */
+    .status-indicator {
+      width: 14px;
+      height: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      .pulse-dot {
+        width: 8px;
+        height: 8px;
+        background-color: #67c23a; /* ElementPlus 成功绿色 */
+        border-radius: 50%;
+        position: relative;
+        box-shadow: 0 0 6px #67c23a;
+
+        /* 呼吸灯动画效果 */
+        &::after {
+          content: "";
+          width: 100%;
+          height: 100%;
+          background-color: #67c23a;
+          border-radius: 50%;
+          position: absolute;
+          left: 0;
+          top: 0;
+          animation: pulse 2s infinite ease-in-out;
+          opacity: 0.8;
+        }
+      }
+    }
+
+    .header-text {
+      display: flex;
+      flex-direction: column;
+
+      .chat-title {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: #1e293b; /* 更高级的灰黑色 */
+        line-height: 1.2;
+      }
+
+      .ai-status-desc {
+        font-size: 11px;
+        color: #94a3b8; /* 较浅的灰色 */
+        margin-top: 2px;
+      }
+    }
+  }
+
+  .header-right {
+    /* 🌟 智能模式 Tag 样式轻量化 */
+/* 在 .chat-header 的样式中找到 .ai-mode-tag 并修改 */
+    .ai-mode-tag {
+      /* 减小内边距：上下 0，左右 12px（原先可能是默认值） */
+      padding: 0 12px; 
+      height: 28px;        /* 固定高度让它看起来更精致 */
+      line-height: 26px;   /* 垂直居中 */
+      border-radius: 14px; /* 圆角设置为高度的一半，形成完美的胶囊形状 */
+      
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;            /* 图标和文字之间的间距 */
+      
+      /* 针对图片中显示的紫色样式优化 */
+      background: rgba(28, 61, 111, 0.08) !important;
+      color: #161e5d !important;
+      border: 1px solid rgba(118, 75, 162, 0.2) !important;
+      font-size: 13px;     /* 稍微调小字号更显高级 */
+    }
+  }
+}
+
+/* 呼吸灯动画 */
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 0.8; }
+  70% { transform: scale(2.5); opacity: 0; }
+  100% { transform: scale(1); opacity: 0; }
+}
+
+/* 增强主内容区的呼吸感 */
+.main-content {
+  flex: 1;
+  padding: 24px;
+  background-color: #f1f5f9 !important;
+  background-image: 
+    /* 荧光紫 */
+    radial-gradient(at 100% 100%, rgba(242, 181, 120, 0.271) 0px, transparent 40%),
+    /* 顶部中心的一抹亮白 */
+    radial-gradient(at 10% 0%, rgba(252, 252, 231, 0.8) 0px, transparent 30%) !important;
+  overflow-y: auto;
+}
+
+
+/* 1. 整体布局容器 */
+/* 1. 调整外层，确保它占据整个屏幕高度，并去掉可能存在的干扰 */
+.ai-chat-layout {
+  display: flex;
+  flex-direction: column;
+  /* 调小画布并居中 */
+  width: 95%; 
+  margin: 0 auto;
+  /* 锁定高度，确保不超出屏幕产生滚动 */
+  height: 90vh; 
+  gap: 20px;
+  overflow: hidden;
+}
+
+/* 2. 第一行：强制子元素高度同步 */
+.chat-dashboard-upper {
+  display: flex;
+  gap: 24px;
+  flex: 1;             /* 占据除按钮外的剩余高度 */
+  min-height: 0;       /* 必须设置，否则 flex 内部滚动失效 */
+  align-items: stretch; /* 强制左右两个 section 高度拉伸至一致 */
+}
+
+/* 3. 左侧对话框：内部结构调整 */
+.chat-section {
+  flex: 1.2;
+  display: flex;
+  flex-direction: column; /* 纵向排版，让 message-list 能撑开 */
+  background: rgba(243, 247, 250, 0.233);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  border: 2px solid rgba(22, 40, 90, 0.034) !important;
+
+
+  .message-list {
+    flex: 1;           /* 核心：占据中间所有剩余空间 */
+    overflow-y: auto;   /* 只有这里产生滚动 */
+    padding: 20px;
+  }
+}
+
+/* 4. 右侧看板：这是你之前失败的关键点 */
+.dashboard-preview-section {
+  flex: 0.8;
+  display: flex;       /* 新增：开启 flex 模式 */
+  flex-direction: column; /* 新增 */
+  border-radius: 20px;
+  border: 2px solid rgba(22, 40, 90, 0.034) !important;
+
+  .artifact-card {
+    flex: 1;           /* 核心修改：强制卡片填满整个 section 的高度 */
+    display: flex;
+    flex-direction: column;
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(20px);
+    border-radius: 28px;
+    padding: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+
+    /* 让内部的雷达图占位符也撑开 */
+    .preview-radar-placeholder {
+      flex: 1;         /* 让虚线框区域自动垂直拉伸 */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 20px;
+      border: 2px dashed rgba(0, 0, 0, 0.05);
+      margin: 20px 0;
+    }
+  }
+}
+
+/* 5. 底部按钮区域 */
+.bottom-action-bar {
+  flex-shrink: 0;      /* 防止按钮被压缩 */
+  display: flex;
+  justify-content: center;
+  padding: 10px 0;
+  /* 在 SCSS 中找到或添加 .analyze-btn 的样式 */
+.analyze-btn {
+  /* 🌟 使用菜单同款渐变色 */
+  background: linear-gradient(135deg, #fdfdfc 0%, #ebf2f6bb 100%) !important;
+  border: none !important;
+  color: rgb(23, 59, 105) !important;
+  
+  /* 增加阴影使其更有悬浮感 */
+  box-shadow: 0 4px 15px rgba(75, 104, 162, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  
+  /* 调整按钮形状与整体圆角风格一致 */
+  border-radius: 12px;
+  padding: 12px 28px !important;
+  font-weight: 600;
+
+  &:hover {
+    /* 悬浮时轻微放大并加强阴影 */
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(75, 100, 162, 0.4);
+    opacity: 0.9;
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+}
+
+/* 消息列表气泡样式优化 */
+/* 消息列表基础布局 */
+.message-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 30px; /* 增加内边距更显高级 */
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+
+  /* 自定义滚动条样式，更细更轻盈 */
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.05); border-radius: 10px; }
+
+  .message-item {
+    display: flex;
+    gap: 12px;
+    max-width: 85%;
+    align-items: flex-end; /* 头像与气泡底部对齐 */
+
+    /* AI 助手样式 */
+    &.assistant {
+      align-self: flex-start;
+      .ai-icon {
+        width: 36px;
+        height: 36px;
+        background: linear-gradient(135deg, #989fed 0%, #153674c7 100%);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 18px;
+        box-shadow: 0 4px 12px rgba(118, 75, 162, 0.2);
+      }
+      .message-bubble {
+        background: #fff;
+        color: #334155;
+        border-radius: 16px 16px 16px 4px; /* 非对称圆角 */
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+      }
+    }
+
+    /* 用户样式 */
+    &.user {
+      flex-direction: row-reverse; /* 头像在右侧 */
+      align-self: flex-end;
+      .message-bubble {
+        /* 采用更有层次的紫色渐变 */
+        background: linear-gradient(135deg, #57a6ec 0%, #5779e999 100%);
+        color: white;
+        border-radius: 16px 16px 4px 16px;
+        box-shadow: 0 8px 20px rgba(118, 75, 162, 0.15);
+      }
+      .message-time { text-align: right; }
+    }
+  }
+
+  .message-content-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .message-bubble {
+    padding: 12px 18px;
+    font-size: 14.5px;
+    line-height: 1.6;
+    word-break: break-word;
+    position: relative;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-1px);
+    }
+  }
+
+  .message-time {
+    font-size: 11px;
+    color: #94a3b8;
+    padding: 0 4px;
+  }
+}
+
+/* 消息输入区域轻量化 */
+.chat-input-area {
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(0, 0, 0, 0.03);
+
+  .input-container {
+    background: white;
+    padding: 12px;
+    border-radius: 16px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03);
+    transition: all 0.3s ease;
+
+    &:focus-within {
+      border-color: #667eea;
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.1);
+    }
+
+    :deep(.el-textarea__inner) {
+      border: none;
+      box-shadow: none;
+      font-size: 14px;
+      color: #1e293b;
+      &::placeholder { color: #cbd5e1; }
+    }
+  }
+}
+
+.input-footer {
+  display: flex;
+  justify-content: space-between; /* 关键：这会让上传按钮在左，发送按钮在右 */
+  align-items: center;
+  margin-top: 12px;
+  padding: 0 4px;
+
+  /* 上传按钮样式优化 */
+  :deep(.el-button--text) {
+    color: #94a3b8;
+    &:hover { color: #764ba2; }
+  }
+
+  /* 发送按钮美化 */
+  .send-btn {
+    width: 36px;
+    height: 36px;
+    border: none;
+    /* 配合你整体的紫色调渐变 */
+    background: linear-gradient(135deg, #8798de 0%, #1d3082 100%);
+    box-shadow: 0 4px 12px rgba(75, 100, 162, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:hover {
+      transform: scale(1.1) rotate(-10deg);
+      box-shadow: 0 6px 16px rgba(75, 111, 162, 0.4);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    /* 调整图标位置 */
+    :deep(.el-icon) {
+      font-size: 18px;
+      margin-left: 2px; /* 修正纸飞机图标的视觉中心偏差 */
+    }
+  }
+}
+
+/* 顺便优化一下输入框容器，增加整体高级感 */
+.input-container {
+  background: #ffffff;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+  transition: border-color 0.3s;
+
+  &:focus-within {
+    border-color: #667eea !important;
+  }
+}
+
+
+/* AI 加载动效 */
+.spinning { animation: rotate 2s linear infinite; }
+@keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+.loading-dots span {
+  width: 5px; height: 5px; background: #94a3b8; border-radius: 50%; display: inline-block;
+  margin: 0 2px; animation: bounce 1.4s infinite ease-in-out;
+  &:nth-child(1) { animation-delay: -0.32s; }
+  &:nth-child(2) { animation-delay: -0.16s; }
+}
+@keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+.dashboard-preview-section {
+  flex: 0.8;
+  .artifact-card {
+    height: 100%;
+    background: rgba(255,255,255,0.4);
+    border-radius: 20px;
+    padding: 24px;
+    border: 1px solid rgba(255,255,255,0.8);
+  }
+  .preview-radar-placeholder {
+    height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed rgba(0,0,0,0.05);
+    border-radius: 20px;
+    margin-top: 20px;
+    color: #94a3b8;
+  }
+}
+
+.sub-page { animation: fadeIn 0.4s ease-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+.dashboard-result-view {
+  animation: slideUp 0.6s ease-out; // 向上滑入动画
+  padding: 20px;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+</style>

@@ -1,0 +1,647 @@
+<template>
+  <div class="growth-tracking-center fade-in">
+    <div class="agent-command-bar glass-card">
+      <div class="agent-info">
+        <div class="agent-avatar">
+          <el-icon class="pulse-icon"><MagicStick /></el-icon>
+        </div>
+        <div class="agent-message">
+          <span class="agent-name">Career Pilot (AI)</span>
+          <p class="message-text">{{ aiAnalysis }}</p>
+        </div>
+      </div>
+      <div class="quick-stats">
+        <div class="stat-item">
+          <span class="label">成长速度</span>
+          <span class="value">+12%</span>
+        </div>
+        <el-divider direction="vertical" />
+        <div class="stat-item">
+          <span class="label">打卡周期</span>
+          <span class="value">{{ consecutiveDays }}天</span>
+        </div>
+      </div>
+    </div>
+
+    <el-row :gutter="20" class="main-tracking-row">
+      <el-col :span="15">
+        <el-card class="glass-card chart-card">
+          <template #header>
+            <div class="card-header">
+              <span><el-icon><TrendCharts /></el-icon> 能力进阶模型</span>
+              <el-tag size="small" effect="plain">实时对比</el-tag>
+            </div>
+          </template>
+          <div class="chart-wrapper">
+            <div ref="radarChartRef" class="radar-chart"></div>
+            <div class="chart-legend">
+              <span class="legend-item current">当前水平</span>
+              <span class="legend-item target">目标要求</span>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+
+      <el-col :span="9">
+        <el-card class="glass-card path-card">
+          <template #header>
+            <div class="card-header">
+              <span><el-icon><Compass /></el-icon> 职业路径步骤</span>
+            </div>
+          </template>
+          <div class="path-steps">
+            <el-steps direction="vertical" :active="2" finish-status="success">
+              <el-step title="基础稳固" description="简历匹配度已达标" />
+              <el-step title="技能突破" description="Agent 建议：强化 ECharts 实战项目" />
+              <el-step title="模拟面试" description="待解锁：AI 模拟压力面试" />
+              <el-step title="目标达成" :description="'锁定 ' + targetPosition" />
+            </el-steps>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
+
+    <el-card class="glass-card todo-section">
+      <template #header>
+        <div class="card-header">
+          <span><el-icon><Checked /></el-icon> 代理人分配任务</span>
+          <span class="todo-subtitle">完成任务可提升 {{ targetPosition }} 匹配度</span>
+        </div>
+      </template>
+      <div class="todo-grid">
+        <div v-for="todo in todoList" :key="todo.id" class="todo-item-card" :class="{ 'is-completed': todo.completed }">
+          <el-checkbox v-model="todo.completed" size="large" />
+          <div class="todo-info">
+            <span class="todo-text">{{ todo.text }}</span>
+            <el-tag v-if="todo.isAI" size="small" type="warning" effect="dark" class="ai-tag">AI 建议</el-tag>
+          </div>
+        </div>
+      </div>
+    </el-card>
+
+    <div 
+  class="floating-agent-wrapper" 
+  :class="{ 'is-active': isCoachingOpen, 'is-dragging': isDragging }"
+  :style="{ left: position.x + 'px', top: position.y + 'px' }"
+  ref="floatBallRef"
+>
+      <div class="floating-avatar-btn" @mousedown="handleMouseDown">
+        <el-icon class="pulse-icon"><MagicStick /></el-icon>
+        <span class="avatar-label">智能辅导</span>
+      </div>
+
+      <el-card class="coaching-dialog glass-card">
+        <template #header>
+          <div class="dialog-header">
+            <h4>AI 职业向导</h4>
+            <el-button type="info" link icon="Close" @click="isCoachingOpen = false" />
+          </div>
+        </template>
+        
+<div class="dialog-body-content">
+  <div class="chat-messages">
+    <div class="bot-msg-wrapper">
+      <div class="bot-avatar-mini"><el-icon><MagicStick /></el-icon></div>
+      <div class="bot-content">
+        <span class="bot-info">AI 职业向导</span>
+        <div class="bot-prompt">
+          {{ aiAnalysis }}
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="input-area">
+    <div class="input-container">
+      <el-input
+        v-model="coachInputValue"
+        type="textarea"
+        :autosize="{ minRows: 2, maxRows: 4 }"
+        placeholder="在此粘贴简历内容..."
+        resize="none"
+      />
+      <div class="input-footer">
+        <el-button 
+          type="primary" 
+          class="send-icon-btn" 
+          @click="sendCoachMessage" 
+          :loading="isCoachingLoading"
+        >
+          <el-icon><Promotion /></el-icon>
+        </el-button>
+      </div>
+    </div>
+  </div>
+</div>
+      </el-card>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted, onUnmounted, nextTick, reactive } from 'vue'
+import { MagicStick, TrendCharts, Compass, Checked, Promotion, Close } from '@element-plus/icons-vue' // 🌟 新增 Promotion, Close 图标引用
+import * as echarts from 'echarts'
+
+// --- 拖拽核心逻辑 ---
+const isDragging = ref(false)
+const position = reactive({ 
+  x: window.innerWidth - 100, // 初始靠右
+  y: window.innerHeight - 150  // 初始靠下
+})
+
+let dragOffset = { x: 0, y: 0 }
+let startPos = { x: 0, y: 0 }
+
+const handleMouseDown = (e) => {
+  isDragging.value = true
+  startPos = { x: e.clientX, y: e.clientY }
+  dragOffset = { x: e.clientX - position.x, y: e.clientY - position.y }
+
+  window.addEventListener('mousemove', handleMouseMove)
+  window.addEventListener('mouseup', handleMouseUp)
+}
+
+const handleMouseMove = (e) => {
+  if (!isDragging.value) return
+  
+  let newX = e.clientX - dragOffset.x
+  let newY = e.clientY - dragOffset.y
+
+  // 边界检查：不让球飞出浏览器
+  const ballSize = 60
+  newX = Math.max(10, Math.min(newX, window.innerWidth - ballSize - 10))
+  newY = Math.max(10, Math.min(newY, window.innerHeight - ballSize - 10))
+
+  position.x = newX
+  position.y = newY
+}
+
+const handleMouseUp = (e) => {
+  isDragging.value = false
+  window.removeEventListener('mousemove', handleMouseMove)
+  window.removeEventListener('mouseup', handleMouseUp)
+
+  // 区分点击与拖拽：位移小于 5px 才视为点击打开对话框
+  const moveDist = Math.sqrt(Math.pow(e.clientX - startPos.x, 2) + Math.pow(e.clientY - startPos.y, 2))
+  if (moveDist < 5) {
+    isCoachingOpen.value = !isCoachingOpen.value
+  }
+}
+
+onUnmounted(() => {
+  window.removeEventListener('mousemove', handleMouseMove)
+  window.removeEventListener('mouseup', handleMouseUp)
+})
+
+// 🌟 原有响应式数据和逻辑均保留
+const aiAnalysis = ref('正在分析中...')
+const targetPosition = ref('高级前端开发工程师')
+const consecutiveDays = ref(12)
+const radarChartRef = ref(null)
+let radarInstance = null
+
+const todoList = ref([
+  { id: 1, text: '重构 PersonalInfo 模块代码', completed: true, isAI: false },
+  { id: 2, text: '集成 ECharts 响应式适配逻辑', completed: false, isAI: true },
+  { id: 3, text: '撰写 AI 职业分析报告总结', completed: false, isAI: true }
+])
+
+// 🌟 初始化雷达图逻辑保留
+const initRadarChart = () => {
+  if (!radarChartRef.value) return
+  if (radarInstance) radarInstance.dispose()
+  
+  radarInstance = echarts.init(radarChartRef.value)
+  const option = {
+    color: ['#70a1ff', '#e2e8f0'],
+    radar: {
+      indicator: [
+        { name: '技术广度', max: 100 }, { name: '业务理解', max: 100 },
+        { name: '沟通能力', max: 100 }, { name: '工程化', max: 100 },
+        { name: '解决问题', max: 100 }
+      ],
+      splitArea: { show: false },
+      axisLine: { lineStyle: { color: 'rgba(112, 161, 255, 0.2)' } },
+      splitLine: { lineStyle: { color: 'rgba(112, 161, 255, 0.1)' } }
+    },
+    series: [{
+      type: 'radar',
+      data: [
+        {
+          value: [85, 70, 75, 90, 80],
+          name: '当前水平',
+          areaStyle: { color: 'rgba(112, 161, 255, 0.2)' },
+          lineStyle: { color: '#70a1ff', width: 2 }
+        },
+        {
+          value: [95, 90, 85, 95, 90],
+          name: '目标要求',
+          lineStyle: { type: 'dashed', color: '#94a3b8', width: 1 },
+          symbol: 'none'
+        }
+      ]
+    }]
+  }
+  radarInstance.setOption(option)
+}
+
+const handleResize = () => radarInstance?.resize()
+
+// 🌟 原有生命周期逻辑保留
+onMounted(async () => {
+  setTimeout(() => {
+    aiAnalysis.value = "检测到你近期在 Vue3 调试上花费了较多时间，已自动为你匹配了相关的性能优化任务。"
+  }, 1000)
+
+  await nextTick()
+  setTimeout(() => {
+    initRadarChart()
+    window.addEventListener('resize', handleResize)
+  }, 200)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+  radarInstance?.dispose()
+})
+
+// 🌟 新增交互逻辑
+const isCoachingOpen = ref(false); // 对话框开关
+const coachInputValue = ref(''); // 输入框内容
+const isCoachingLoading = ref(false); // 提交状态
+
+const toggleCoaching = () => {
+  isCoachingOpen.value = !isCoachingOpen.value;
+}
+
+const sendCoachMessage = () => {
+  if (!coachInputValue.value.trim()) return;
+  
+  isCoachingLoading.value = true;
+  // 模拟发送和 Agent 思考中
+  setTimeout(() => {
+    ElMessage.success({ message: '提交成功！Agent 正在评估你的需求...', offset: 100 });
+    coachInputValue.value = '';
+    isCoachingLoading.value = false;
+    isCoachingOpen.value = false;
+  }, 1500)
+}
+</script>
+
+<style scoped lang="scss">
+.growth-tracking-center {
+  padding: 10px;
+  background: transparent;
+  
+  /* 原有所有卡片样式保留 */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(112, 161, 255, 0.1);
+    margin-bottom: 20px;
+    overflow: hidden !important;
+
+    :deep(.el-card__header) {
+      border-bottom: 1px solid rgba(112, 161, 255, 0.1);
+      padding: 15px 20px;
+      .card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-weight: bold;
+        color: #1e293b;
+        .el-icon { margin-right: 8px; color: #70a1ff; }
+      }
+    }
+    
+    :deep(.el-card__body) {
+      overflow: hidden !important; 
+    }
+  }
+
+  /* 原有其他所有样式保留 */
+  .agent-command-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 25px;
+    background: linear-gradient(90deg, rgba(112, 161, 255, 0.1) 0%, rgba(255,255,255,0.6) 100%);
+    
+    .agent-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      .agent-avatar {
+        width: 45px; height: 45px;
+        background: #70a1ff;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 24px;
+        .pulse-icon { animation: pulse 2s infinite; }
+      }
+      .agent-name { font-size: 12px; color: #70a1ff; font-weight: bold; }
+      .message-text { margin: 0; font-size: 14px; color: #475569; }
+    }
+    
+    .quick-stats {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      .stat-item {
+        text-align: right;
+        .label { font-size: 12px; color: #94a3b8; display: block; }
+        .value { font-size: 18px; font-weight: bold; color: #70a1ff; }
+      }
+    }
+  }
+
+  .chart-wrapper {
+    height: 380px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    .radar-chart { width: 100%; height: 320px; }
+    .chart-legend {
+      display: flex;
+      gap: 20px;
+      font-size: 12px;
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        &::before { content: ''; width: 12px; height: 2px; }
+        &.current::before { background: #70a1ff; }
+        &.target::before { background: #94a3b8; border-top: 1px dashed #94a3b8; height: 0; }
+      }
+    }
+  }
+
+  .path-steps { padding: 20px 10px; height: 380px; }
+
+  .todo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 15px;
+    padding: 10px 0;
+    
+    .todo-item-card {
+      background: rgba(255, 255, 255, 0.4);
+      padding: 15px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.3s;
+      border: 1px solid transparent;
+      
+      &:hover { border-color: #70a1ff; background: white; }
+      &.is-completed { opacity: 0.6; .todo-text { text-decoration: line-through; } }
+      .todo-info { display: flex; flex-direction: column; gap: 4px; .todo-text { font-size: 14px; color: #334155; } .ai-tag { width: fit-content; border: none; } }
+    }
+  }
+
+  /* 原有呼吸和 fadeIn 动画保留 */
+  @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
+  .fade-in { animation: fadeIn 0.8s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* 🌟 新增悬浮辅导员组件样式 */
+  .floating-agent-wrapper {
+  position: fixed;
+  z-index: 2000;
+  touch-action: none;
+
+  /* 1. 悬浮球样式 */
+  .floating-avatar-btn {
+    width: 65px;
+    height: 65px;
+    background: linear-gradient(135deg, #70a1ff 0%, #4a8cff 100%);
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    cursor: grab;
+    box-shadow: 0 10px 30px rgba(112, 161, 255, 0.4);
+    transition: transform 0.2s;
+    user-select: none;
+
+    &:active { cursor: grabbing; }
+    &:hover { transform: scale(1.05); }
+
+    .el-icon { font-size: 26px; }
+    .avatar-label { font-size: 10px; font-weight: bold; margin-top: 2px; }
+  }
+
+  /* 2. 大尺寸中心对话框样式 */
+  .coaching-dialog {
+    position: absolute;
+    bottom: 40px;
+    right: 65px !important;
+    left: auto !important;
+    top: auto !important;
+    transform: scale(0.8); /* 初始缩放 */
+    transform-origin: bottom right;
+
+    /* 模仿图二的大尺寸 */
+    width: 35vw;
+    max-width: 800px;
+    height: 80vh;
+    max-height: 600px;
+    
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    z-index: 2100;
+    display: flex;
+    flex-direction: column;
+    border-radius: 24px;
+    border: 1px solid rgba(112, 161, 255, 0.3);
+
+:deep(.el-card__header) {
+  padding: 14px 20px;
+  background: rgba(255, 255, 255, 0.8);
+  .dialog-header {
+    display: flex;
+    align-items: center;
+    h4 { 
+      margin: 0; 
+      font-size: 16px; 
+      color: #1e293b; 
+      display: flex; 
+      align-items: center;
+      &::before { /* 模拟图二左侧的绿色在线状态点 */
+        content: '';
+        width: 8px;
+        height: 8px;
+        background: #10b981;
+        border-radius: 50%;
+        margin-right: 8px;
+        box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+      }
+    }
+  }
+}
+
+   :deep(.el-card__body) {
+      flex: 1;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      height: 100%;
+    }
+
+    .dialog-body-content {
+      flex: 1;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      background: #fcfcfd; // 浅色背景区分聊天区
+
+      .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        margin-bottom: 15px;
+
+        .bot-msg-wrapper {
+          display: flex;
+          gap: 12px;
+          
+          .bot-avatar-mini {
+            width: 32px;
+            height: 32px;
+            background: #70a1ff;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            flex-shrink: 0;
+          }
+
+          .bot-content {
+            .bot-info { font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block; }
+            .bot-prompt { 
+              background: white; 
+              padding: 12px 16px; 
+              border-radius: 4px 16px 16px 16px; 
+              color: #334155; 
+              font-size: 14px;
+              line-height: 1.5;
+              box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+              border: 1px solid #f1f5f9;
+            }
+          }
+        }
+      }
+
+      /* 实现图二样式的输入框区域 */
+.input-area {
+  padding: 16px 20px;
+  background: transparent;
+
+  .input-container {
+    background: #ffffff;
+    border: 1px solid #eef2f6;
+    border-radius: 16px;
+    padding: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    transition: all 0.3s ease;
+
+    &:focus-within {
+      border-color: #70a1ff;
+      box-shadow: 0 4px 20px rgba(112, 161, 255, 0.1);
+    }
+
+    :deep(.el-textarea__inner) {
+      border: none !important;      /* 彻底移除灰色边框 */
+      box-shadow: none !important;  /* 移除聚焦时的蓝色外边框阴影 */
+      background: transparent;     /* 确保背景透明 */
+      padding: 5px;
+      font-size: 14px;
+      color: #334155;
+      resize: none;
+      &::placeholder {
+        color: #cbd5e1;
+      }
+      &:focus {
+        box-shadow: none;
+      }
+    }
+
+    .input-footer {
+      display: flex;
+      justify-content: flex-end; /* 🌟 确保按钮在右边 */
+      margin-top: 8px;
+
+      .send-icon-btn {
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        border-radius: 50%; /* 圆形按钮 */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #70a1ff 0%, #4a8cff 100%);
+        border: none;
+        transition: transform 0.2s;
+
+        &:hover {
+          transform: scale(1.1);
+          box-shadow: 0 4px 12px rgba(112, 161, 255, 0.3);
+        }
+
+        .el-icon {
+          font-size: 18px;
+          color: white;
+          margin: 0;
+        }
+      }
+    }
+  }
+}
+    }
+
+    /* 删掉原本的 dialog-footer 样式，因为按钮已移入 input-area */
+
+    .dialog-footer {
+      padding: 16px 24px;
+      border-top: 1px solid #f1f5f9;
+      display: flex;
+      justify-content: flex-end;
+      .el-button { padding: 12px 24px; border-radius: 12px; }
+    }
+  }
+
+  /* 3. 激活状态 */
+  &.is-active .coaching-dialog {
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1);
+  }
+
+  /* 4. 遮罩层 */
+  .dialog-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(15, 23, 42, 0.3);
+    backdrop-filter: blur(4px);
+    z-index: 2050;
+  }
+}
+
+/* 拖拽过程中禁用动画以防抖动 */
+.is-dragging {
+  transition: none !important;
+}
+}
+</style>
