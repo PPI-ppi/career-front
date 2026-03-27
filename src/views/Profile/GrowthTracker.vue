@@ -23,7 +23,7 @@
       </div>
     </div>
 
-    <el-row :gutter="20" class="main-tracking-row">
+    <el-row :gutter="20" class="main-tracking-row equal-height">
       <el-col :span="15">
         <el-card class="glass-card chart-card">
           <template #header>
@@ -470,6 +470,7 @@ const sendCoachMessage = () => {
   background: rgba(255, 255, 255, 0.8);
   .dialog-header {
     display: flex;
+    justify-content: space-between; /* 🌟 关键：将标题推向左，叉叉推向右 */
     align-items: center;
     h4 { 
       margin: 0; 
@@ -636,6 +637,32 @@ const sendCoachMessage = () => {
     background: rgba(15, 23, 42, 0.3);
     backdrop-filter: blur(4px);
     z-index: 2050;
+  }
+}
+
+.equal-height {
+  display: flex;
+  align-items: stretch; /* 确保子项（el-col）高度一致 */
+  margin-bottom: 20px !important;
+
+  :deep(.el-col) {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* 强制卡片撑满 col 高度 */
+  .glass-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0; /* 移除间距防止溢出 */
+  }
+
+  /* 确保卡片内容区自动填充剩余空间 */
+  :deep(.el-card__body) {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
   }
 }
 

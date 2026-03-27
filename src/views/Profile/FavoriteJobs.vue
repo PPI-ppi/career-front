@@ -1,13 +1,11 @@
 <template>
   <div class="favorite-jobs">
-    <!-- 空状态 -->
     <div v-if="favoriteList.length === 0" class="empty-state">
       <el-empty description="暂无收藏岗位，快去探索吧！">
         <el-button type="primary" @click="goToExplore">去探索岗位</el-button>
       </el-empty>
     </div>
 
-    <!-- 岗位列表 -->
     <div v-else class="job-list">
       <div
         v-for="job in favoriteList"
@@ -15,93 +13,182 @@
         class="job-card"
         @click="goToDetail(job.id)"
       >
-        <!-- 第一行：职位标题 -->
-        <div class="job-title">{{ job.title }}</div>
-
-        <!-- 第二行：公司名称 + 地点 -->
-        <div class="job-company">
-          <span class="company-name">{{ job.company }}</span>
-          <span class="divider">|</span>
-          <span class="job-city">{{ job.city }}</span>
-          <span class="divider">|</span>
-          <span class="job-experience">{{ job.experience }}</span>
+        <div class="company-logo">
+          {{ job.company ? job.company.charAt(0) : '岗' }}
         </div>
 
-        <!-- 第三行：薪资范围（红色高亮） -->
-        <div class="job-salary">{{ job.salary }}</div>
+        <div class="job-info">
+          <div class="info-top">
+            <span class="job-title">{{ job.title }}</span>
+            <span class="job-salary">{{ job.salary }}</span>
+          </div>
 
-        <!-- 第四行：技能/福利标签 -->
-        <div class="job-tags">
-          <el-tag
-            v-for="tag in job.tags"
-            :key="tag"
-            size="small"
-            class="tag-item"
-          >
-            {{ tag }}
-          </el-tag>
+          <div class="job-company-row">
+            <span class="company-name">{{ job.company }}</span>
+            <span class="divider">|</span>
+            <span class="job-city">{{ job.city }}</span>
+            <span class="divider">|</span>
+            <span class="job-experience">{{ job.experience }}</span>
+          </div>
+
+          <div class="job-tags">
+            <el-tag
+              v-for="tag in job.tags"
+              :key="tag"
+              size="small"
+              effect="plain"
+              class="custom-tag"
+            >
+              {{ tag }}
+            </el-tag>
+          </div>
         </div>
-
-        <!-- 第五行：发布时间 -->
-        <div class="job-time">{{ job.time }}</div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-// ⚠️ 数据导入路径 - 请根据实际项目结构调整
-import { allJobs } from '@/mock/data.js'
 
 const router = useRouter()
 
-// ⚠️ 注意：如果 mock 数据中没有 isFavorite 字段，需要手动添加或调整过滤逻辑
-// 这里假设数据中已包含 isFavorite 字段，如果没有，需要先在 data.js 中添加
-const favoriteList = computed(() => {
-  // 过滤出已收藏的岗位 (isFavorite === true)
-  return allJobs.filter(job => job.isFavorite === true)
-})
+// 模拟数据（保持您原有的数据结构）
+const favoriteList = ref([
+  {
+    id: 1,
+    title: '前端开发工程师',
+    company: '阿里巴巴',
+    city: '杭州',
+    experience: '3-5年',
+    salary: '25k-45k',
+    tags: ['Vue3', 'TypeScript', '大前端']
+  },
+  {
+    id: 2,
+    title: '高级 UI 设计师',
+    company: '腾讯',
+    city: '深圳',
+    experience: '5-10年',
+    salary: '30k-50k',
+    tags: ['B端设计', '交互', '设计系统']
+  }
+])
 
-// 跳转到岗位详情页
-// ⚠️ 路由名称和路径 - 请根据实际路由配置核对
-const goToDetail = (id) => {
-  router.push(`/position-detail/${id}`)
+const goToExplore = () => {
+  router.push('/job-explorer')
 }
 
-// 跳转到岗位探索页
-const goToExplore = () => {
-  router.push('/jobs')
+const goToDetail = (id) => {
+  console.log('跳转至详情:', id)
 }
 </script>
 
 <style scoped lang="scss">
 .favorite-jobs {
-  padding: 20px;
-  background: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  height: 600px;
+  height: 100%;
+  padding: 10px;
   overflow-y: auto;
 
-  // 自定义滚动条样式
-  &::-webkit-scrollbar {
-    width: 6px;
+  /* 自定义滚动条 */
+  &::-webkit-scrollbar { width: 5px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+}
+
+.job-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.job-card {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+  background: #ffffff;
+  border: 1px solid #f1f5f9;
+  border-radius: 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(148, 163, 184, 0.1);
+    border-color: #3b82f6;
   }
 
-  &::-webkit-scrollbar-track {
-    background: #f5f7fa;
-    border-radius: 3px;
+  /* 左侧 Logo 占位：同步图三样式 */
+  .company-logo {
+    flex-shrink: 0;
+    width: 54px;
+    height: 54px;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    color: #3b82f6;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: bold;
+    border: 1px solid #e0e7ff;
   }
 
-  &::-webkit-scrollbar-thumb {
-    background: #c0c4cc;
-    border-radius: 3px;
+  .job-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 
-    &:hover {
-      background: #909399;
+    .info-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      .job-title {
+        font-size: 17px;
+        font-weight: 700;
+        color: #1e293b;
+      }
+
+      .job-salary {
+        font-size: 16px;
+        font-weight: 700;
+        color: #ef4444; /* 醒目的红色薪资 */
+      }
+    }
+
+    .job-company-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #64748b;
+
+      .divider {
+        color: #e2e8f0;
+      }
+      .company-name {
+        color: #475569;
+        font-weight: 500;
+      }
+    }
+
+    .job-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+
+      .custom-tag {
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        color: #64748b !important;
+        border-radius: 6px;
+        font-weight: 400;
+      }
     }
   }
 }
@@ -110,74 +197,6 @@ const goToExplore = () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100%;
-}
-
-.job-list {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.job-card {
-  padding: 20px;
-  border: 1px solid #e4e7ed;
-  border-radius: 8px;
-  background: #ffffff;
-  cursor: pointer;
-  transition: all 0.3s ease;
-
-  &:hover {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-    transform: translateY(-2px);
-    border-color: #409EFF;
-  }
-
-  .job-title {
-    font-size: 18px;
-    font-weight: bold;
-    color: #303133;
-    margin-bottom: 10px;
-  }
-
-  .job-company {
-    font-size: 14px;
-    color: #909399;
-    margin-bottom: 10px;
-
-    .company-name {
-      font-weight: 500;
-    }
-
-    .divider {
-      margin: 0 8px;
-      color: #c0c4cc;
-    }
-  }
-
-  .job-salary {
-    font-size: 16px;
-    font-weight: bold;
-    color: #f56c6c; // 红色高亮
-    margin-bottom: 12px;
-  }
-
-  .job-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 12px;
-
-    .tag-item {
-      background: #f0f9eb;
-      border-color: #e1f3d8;
-      color: #67c23a;
-    }
-  }
-
-  .job-time {
-    font-size: 12px;
-    color: #c0c4cc;
-  }
+  height: 300px;
 }
 </style>
