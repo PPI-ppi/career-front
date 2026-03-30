@@ -49,39 +49,39 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref,onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import rawData from '@/assets/data.json'
 
 const router = useRouter()
 
-// 模拟数据（保持您原有的数据结构）
-const favoriteList = ref([
-  {
-    id: 1,
-    title: '前端开发工程师',
-    company: '阿里巴巴',
-    city: '杭州',
-    experience: '3-5年',
-    salary: '25k-45k',
-    tags: ['Vue3', 'TypeScript', '大前端']
-  },
-  {
-    id: 2,
-    title: '高级 UI 设计师',
-    company: '腾讯',
-    city: '深圳',
-    experience: '5-10年',
-    salary: '30k-50k',
-    tags: ['B端设计', '交互', '设计系统']
-  }
-])
+const favoriteList = ref([])
+
+onMounted(() => {
+  // 1. 获取收藏的 ID 列表
+  const favoriteIds = JSON.parse(localStorage.getItem('user_favorites') || '[]')
+  
+  // 2. 从 data.json 中筛选出这些岗位，并进行字段映射（确保和列表页一致）
+  favoriteList.value = rawData
+    .map((item, index) => ({
+      ...item,
+      id: item.id || index + 1,
+      title: item.job_title,
+      company: item.company_name,
+      salary: item.min_salary ? `${item.min_salary/1000}k-${item.max_salary/1000}k` : '面议',
+      city: item.city || '杭州',
+      experience: item.experience || '经验不限',
+      tags: item.industry ? item.industry.split(',').slice(0, 2) : ['互联网']
+    }))
+    .filter(job => favoriteIds.includes(job.id)) // 只保留已收藏的
+})
 
 const goToExplore = () => {
   router.push('/job-explorer')
 }
 
 const goToDetail = (id) => {
-  console.log('跳转至详情:', id)
+  router.push({ name: 'JobDetail', params: { id } })
 }
 </script>
 
@@ -98,10 +98,19 @@ const goToDetail = (id) => {
 }
 
 .job-list {
+  flex: 1;
+  /* 删掉之前的 grid-template-columns */
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  flex-direction: column; /* 改为垂直列表 */
+  gap: 16px; 
 }
+
+.job-explorer {
+  background-color: #f5f7fa; /* 淡淡的灰色/蓝色背景，衬托白色卡片 */
+  min-height: 100vh;
+}
+
+
 
 .job-card {
   display: flex;

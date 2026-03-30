@@ -79,7 +79,33 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ArrowLeft, Star, StarFilled } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { allJobs } from '@/mock/data.js'
+import rawData from '@/assets/data.json'
+
+onMounted(async () => {
+  loading.value = true
+  // 模拟一点延迟效果
+  await new Promise(resolve => setTimeout(resolve, 300))
+
+  // 注意：route.params.id 是字符串，JSON 里的 id 可能是数字，需要 parseInt
+  const targetId = parseInt(route.params.id)
+  const foundItem = rawData.find((item, index) => (item.id || index + 1) === targetId)
+
+  if (foundItem) {
+    // 关键步骤：映射字段，否则模板里的 {{ job.title }} 会因为找不到字段而空白
+    job.value = {
+      id: targetId,
+      title: foundItem.job_title,      // 对应 JSON 的 job_title
+      company: foundItem.company_name, // 对应 JSON 的 company_name
+      salary: foundItem.min_salary ? `${foundItem.min_salary/1000}k-${foundItem.max_salary/1000}k` : '面议',
+      city: foundItem.city || '杭州',
+      description: foundItem.job_details, // 对应 JSON 的 job_details
+      requirements: [] // 画像先置空
+      
+    }
+    isFavorited.value = favorites.value.includes(targetId)
+  }
+  loading.value = false
+})
 
 const router = useRouter()
 const route = useRoute()
@@ -94,8 +120,7 @@ const job = ref(null)
 const isFavorited = ref(false)
 
 // 模拟用户收藏列表（实际项目中应使用 Pinia 或 localStorage）
-const favorites = ref([1, 3])
-
+const favorites = ref(JSON.parse(localStorage.getItem('user_favorites') || '[]'))
 // 获取职位 ID
 const jobId = computed(() => route.params.id)
 
@@ -119,20 +144,26 @@ const goBack = () => {
   router.back()
 }
 
-// 切换收藏状态
+// 2. 修改点击收藏的逻辑
 const toggleFavorite = () => {
   if (job.value) {
-    const jobId = job.value.id
-    if (isFavorited.value) {
-      // 取消收藏
-      favorites.value = favorites.value.filter(id => id !== jobId)
+    const id = parseInt(jobId.value)
+    const index = favorites.value.indexOf(id)
+    
+    if (index > -1) {
+      // 如果已收藏，则移除
+      favorites.value.splice(index, 1)
+      isFavorited.value = false
       ElMessage.success('已取消收藏')
     } else {
-      // 添加收藏
-      favorites.value.push(jobId)
+      // 如果未收藏，则添加
+      favorites.value.push(id)
+      isFavorited.value = true
       ElMessage.success('已收藏')
     }
-    isFavorited.value = !isFavorited.value
+    
+    // 🌟 关键：同步到本地存储
+    localStorage.setItem('user_favorites', JSON.stringify(favorites.value))
   }
 }
 </script>
