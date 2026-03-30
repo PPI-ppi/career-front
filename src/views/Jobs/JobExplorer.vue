@@ -127,10 +127,11 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed , onMounted} from 'vue'
 import { useRouter } from 'vue-router'
 import { Search, ArrowDown, Pointer, Loading } from '@element-plus/icons-vue'
-import { allJobs } from '@/mock/data.js'
+import rawData from '@/assets/data.json'
+
 
 const router = useRouter()
 const searchQuery = ref('')
@@ -139,6 +140,35 @@ const dialogVisible = ref(false)
 const selectedOptions = ref([])
 const selectedTags = ref([])
 const hoveredJob = ref(null)
+const allJobs = ref([])
+
+onMounted(() => {
+  // 核心：这里的左侧 Key 必须和 <template> 里的 job.xxx 对应
+  allJobs.value = rawData.map((item, index) => ({
+    ...item,
+    id: item.id || index + 1,
+    
+    // 对应模板中的 {{ job.title }}
+    title: item.job_title,      
+    
+    // 对应模板中的 {{ job.company }}
+    company: item.company_name, 
+    
+    // 对应模板中的 {{ job.salary }}
+    salary: item.min_salary ? `${item.min_salary/1000}k-${item.max_salary/1000}k` : '面议',
+    
+    // 对应模板中的 {{ job.scale }}
+    scale: item.company_scale || '大厂',
+    
+    // 对应模板中的 v-for="tag in job.tags" (JSON里是逗号分隔的字符串，需要转成数组)
+    tags: item.industry ? item.industry.split(',').slice(0, 2) : ['互联网'],
+    
+    // 对应右侧预览面板需要的字段
+    description: item.job_details,
+    city: item.city || '杭州',
+    matchRate: 92 
+  }))
+})
 
 // --- 🌟 无限滚动逻辑控制 ---
 const loading = ref(false)
@@ -147,11 +177,16 @@ const step = 4      // 每次滚动增加的条数
 
 // 基础过滤后的全量列表
 const filteredJobs = computed(() => {
-  let result = [...allJobs]
-  if (searchQuery.value) {
-    result = result.filter(j => j.title.includes(searchQuery.value) || j.company.includes(searchQuery.value))
-  }
-  return result
+  // 即使 allJobs 还没加载出来，也返回一个空数组，防止报错
+  if (!Array.isArray(allJobs.value)) return []
+  
+  if (!searchQuery.value) return allJobs.value
+  
+  return allJobs.value.filter(j => 
+    // 统一使用映射后的 title 和 company
+    (j.title && j.title.includes(searchQuery.value)) || 
+    (j.company && j.company.includes(searchQuery.value))
+  )
 })
 
 // 真正显示在页面上的部分数据

@@ -31,6 +31,51 @@ export const hotJobs = [
     location: '上海',
     matchRate: 78,
     tags: ['数据分析', '用户增长']
+  },
+  {
+    id: 4,
+    jobTitle: '产品运营经理',
+    companyName: '淘宝',
+    location: '上海',
+    matchRate: 78,
+    salary: '20k - 40k',
+    tags: ['数据驱动', '用户增长', 'SQL']
+  },
+  {
+    id: 5,
+    jobTitle: '后端架构师 (Go/Java)',
+    companyName: '字节跳动',
+    location: '深圳',
+    matchRate: 88,
+    salary: '40k - 70k',
+    tags: ['高并发', '微服务', 'K8s']
+  },
+  {
+    id: 6,
+    jobTitle: '数据分析科学家',
+    companyName: '百度',
+    location: '北京',
+    matchRate: 95,
+    salary: '30k - 55k',
+    tags: ['建模', '特征工程', 'PySpark']
+  },
+  {
+    id: 7,
+    jobTitle: '全栈开发工程师',
+    companyName: '腾讯 · 微信',
+    location: '广州',
+    matchRate: 82,
+    salary: '35k - 65k',
+    tags: ['Node.js', 'React', '分布式']
+  },
+  {
+    id: 8,
+    jobTitle: '网络安全攻防专家',
+    companyName: '奇安信',
+    location: '成都',
+    matchRate: 90,
+    salary: '28k - 50k',
+    tags: ['渗透测试', '零信任', '溯源']
   }
 ];
 

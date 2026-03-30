@@ -146,67 +146,62 @@
 
       <!-- 右列：登录/用户状态卡片 -->
       <section class="right-panel">
-  <el-card class="panel-card roadmap-focus-card">
+  <el-card class="panel-card roadmap-focus-card" @mouseenter="stopAutoPlay" @mouseleave="startAutoPlay">
     <div class="ai-status-bar">
       <div class="pulse-dot"></div>
-      <span>AI 职场导航引擎：深度规划中...</span>
+      <span>AI 职场导航引擎：{{ isFrontPage ? '核心概览' : '深度指令' }}</span>
     </div>
 
-    <div class="roadmap-focus-content">
-      <div class="target-section">
-        <div class="target-label">当前锚定目标 (Q3-Q4)</div>
-        <div class="target-title">资深前端开发工程师 (P6)</div>
-        <div class="match-score-group">
-          <div class="score-item">
-            <span class="score-num">78%</span>
-            <span class="score-text">能力匹配度</span>
-          </div>
-          <div class="divider"></div>
-          <div class="score-item">
-            <span class="score-num">+15%</span>
-            <span class="score-text">预估胜率涨幅</span>
+    <div class="stack-viewport">
+      <div :class="['stack-item', isFrontPage ? 'is-front' : 'is-back']">
+        <div class="target-section">
+          <div class="target-label">当前锚定目标 (Q3-Q4)</div>
+          <div class="target-title">资深前端开发工程师 (P6)</div>
+          <div class="match-score-group">
+            <div class="score-item"><span class="score-num">78%</span><span class="score-text">能力匹配度</span></div>
+            <div class="divider"></div>
+            <div class="score-item"><span class="score-num">+15%</span><span class="score-text">预估胜率涨幅</span></div>
           </div>
         </div>
+        <div class="vertical-roadmap">
+          <div class="step-item past">
+             <div class="step-icon"><el-icon><SuccessFilled /></el-icon></div>
+             <div class="step-title">已达成：画像构建 (P1)</div>
+          </div>
+          <div class="step-item active">
+             <div class="step-icon"><div class="active-ring"></div></div>
+             <div class="step-title highlight">进行中：实习求职冲刺</div>
+          </div>
+          </div>
       </div>
 
-      <div class="vertical-roadmap">
-        <div class="step-item past">
-          <div class="step-icon"><el-icon><SuccessFilled /></el-icon></div>
-          <div class="step-info">
-            <div class="step-title">已达成：画像构建 (P1)</div>
-            <div class="step-desc">已同步最新能力栈模型</div>
+      <div :class="['stack-item', !isFrontPage ? 'is-front' : 'is-back']">
+        <div class="target-section">
+          <div class="target-label">能力模型分析</div>
+          <div class="target-title">深度洞察报告</div>
+        </div>
+        
+        <div class="analysis-content">
+          <div class="skill-mini-row">
+            <div class="skill-info"><span>工程化水平</span><span>60%</span></div>
+            <el-progress :percentage="60" :show-text="false" stroke-width="4" />
+          </div>
+          <div class="skill-mini-row" style="margin-top: 15px;">
+            <div class="skill-info"><span>业务架构</span><span>85%</span></div>
+            <el-progress :percentage="85" :show-text="false" stroke-width="4" color="#67c23a" />
           </div>
         </div>
 
-        <div class="step-item active">
-          <div class="step-icon">
-            <div class="active-ring"></div>
-          </div>
-          <div class="step-info">
-            <div class="step-tag">进行中 · P2 阶段</div>
-            <div class="step-title highlight">核心任务：实习求职冲刺</div>
-            
-            <div class="ai-agent-suggestion">
-              <div class="sug-header">🤖 Agent 深度建议：</div>
-              <p>📍 核心缺口：性能优化实战。建议补齐 <strong>Webpack 压缩</strong> 或 <strong>Vite 首屏加速</strong> 相关项目描述。</p>
-              <div class="countdown">剩余：<span>12</span> 天投递截止</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="step-item future">
-          <div class="step-icon"><el-icon><Lock /></el-icon></div>
-          <div class="step-info">
-            <div class="step-title">AI 预测：技术专家转型 (Q4)</div>
-            <div class="predict-badge">匹配度 90% 达成路径已算</div>
-          </div>
+        <div class="ai-agent-suggestion-card">
+           <div class="sug-header">🤖 Agent 指令：</div>
+           <p>检测到 P2 阶段核心阻塞。建议优先补齐 <strong>Vite 插件开发</strong> 经验，可大幅提升竞争力。</p>
         </div>
       </div>
-
-      <el-button type="primary" class="full-path-link" round @click="$router.push('/growth-tracking')">
-        查看完整全周期规划 <el-icon><ArrowRight /></el-icon>
-      </el-button>
     </div>
+
+    <el-button type="primary" class="full-path-link" round @click="$router.push('/growth-tracking')">
+      查看完整全周期规划 <el-icon><ArrowRight /></el-icon>
+    </el-button>
   </el-card>
 </section>
     </main>
@@ -252,20 +247,55 @@
   <div class="post-sphere data-node sphere-16" :ref="setNodeRef"><span class="label">物联网 IOT</span></div>
 </div>
 
-  <div class="jobs-list-container">
-    <div class="section-header">
-      <h2 class="section-title">🔥 热门岗位推荐</h2>
+
+<div class="jobs-list-container">
+  <div class="section-header">
+    <h2 class="section-title">🔥 热门岗位推荐</h2>
+  </div>
+
+  <div class="infinite-scroll-wrapper">
+    
+    <div class="scroll-row row-left">
+      <div class="scroll-track">
+        <div class="scroll-group">
+          <JobCard
+            v-for="job in hotJobs.slice(0, 3)"
+            :key="'r1-' + job.id"
+            :job="formatJobData(job)"
+          />
+        </div>
+        <div class="scroll-group" aria-hidden="true">
+          <JobCard
+            v-for="job in hotJobs.slice(0, 3)"
+            :key="'r1-copy-' + job.id"
+            :job="formatJobData(job)"
+          />
+        </div>
+      </div>
     </div>
 
-    <div class="job-grid">
-      <JobCard
-        v-for="(job, index) in hotJobs"
-        :key="job.id"
-        :job="formatJobData(job)"
-        :class="'job-card-item-' + index" 
-      />
+    <div class="scroll-row row-right">
+      <div class="scroll-track">
+        <div class="scroll-group">
+          <JobCard
+            v-for="job in hotJobs.slice(3, 6)"
+            :key="'r2-' + job.id"
+            :job="formatJobData(job)"
+          />
+        </div>
+        <div class="scroll-group" aria-hidden="true">
+          <JobCard
+            v-for="job in hotJobs.slice(3, 6)"
+            :key="'r2-copy-' + job.id"
+            :job="formatJobData(job)"
+          />
+        </div>
+      </div>
     </div>
+
   </div>
+</div>
+
 </section>
 
     <!-- 底部信息 -->
@@ -303,6 +333,35 @@ import * as echarts from 'echarts'
 import { hotJobs, userData } from '@/mock/data.js'
 import JobCard from '@/components/JobCard.vue'
 import gsap from 'gsap'
+
+const currentPage = ref(1)
+const pageDirection = ref('slide-left')
+let autoPlayTimer = null
+
+// 🌟 新增：层级切换逻辑
+const isFrontPage = ref(true)
+let stackTimer = null
+
+const startAutoPlay = () => {
+  if (stackTimer) clearInterval(stackTimer)
+  stackTimer = setInterval(() => {
+    isFrontPage.value = !isFrontPage.value
+  }, 5000) // 每 5 秒切换一次前后位置
+}
+
+const stopAutoPlay = () => {
+  if (stackTimer) clearInterval(stackTimer)
+}
+
+onMounted(() => {
+  startAutoPlay()
+})
+
+onUnmounted(() => {
+  stopAutoPlay()
+})
+
+
 
 const particleContainer = ref(null)
 const bgCanvas = ref(null)
@@ -706,6 +765,7 @@ const handleResize = () => {
 .home {
   min-height: 100vh;
   background: #c4d1f617;
+  
 }
 
 // ========== 1. 顶部区域 (修正了布局与层级) ==========
@@ -1444,6 +1504,74 @@ const handleResize = () => {
   }
 }
 
+/* 锁定右侧卡片尺寸，确保布局不跳动 */
+/* 锁定卡片高度，确保不挤压外部布局 */
+.roadmap-focus-card {
+  height: 570px; 
+  position: relative;
+  overflow: hidden;
+}
+
+.roadmap-focus-card :deep(.el-card__body) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 24px !important;
+}
+
+/* 🌟 核心：开启 3D 视角 */
+.stack-viewport {
+  flex: 1;
+  position: relative;
+  perspective: 1200px; /* 景深强度 */
+  margin: 15px 0;
+}
+
+.stack-item {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); /* 具有 Mobbin 感的弹性缓动 */
+  background: white;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 🌟 前景状态：位于中心，完全清晰 */
+.is-front {
+  transform: translateZ(0) translateY(0);
+  opacity: 1;
+  z-index: 2;
+  filter: blur(0);
+}
+
+/* 🌟 后景状态：向深处退去，缩小，下沉，模糊 */
+.is-back {
+  transform: translateZ(-120px) translateY(30px) scale(0.85);
+  opacity: 0.3;
+  z-index: 1;
+  filter: blur(4px);
+  pointer-events: none; /* 后面的容器不可点击 */
+}
+
+/* 第二页容器特有样式 */
+.ai-agent-suggestion-card {
+  margin-top: auto;
+  background: rgba(64, 158, 255, 0.05);
+  border-left: 3px solid #409eff;
+  padding: 15px;
+  border-radius: 8px;
+}
+.ai-agent-suggestion-card p {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #5f6c7b;
+  margin-top: 5px;
+}
+
 /* 旋转光效动画 */
 @keyframes rotateLight {
   from { transform: rotate(0deg); }
@@ -1486,7 +1614,8 @@ const handleResize = () => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 32px; 
+    margin-bottom: 20px;
+    margin-top: 50px; 
     padding-left: 10px;
     border-left: 4px solid #409EFF; 
     
@@ -1502,58 +1631,67 @@ const handleResize = () => {
   }
 
   /* B. 网格布局 */
-  .job-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 30px; 
-    
-    @media (max-width: 1200px) { grid-template-columns: repeat(2, 1fr); }
-    @media (max-width: 768px) { grid-template-columns: 1fr; }
+  /* 容器：隐藏溢出并确保全屏感 */
+.infinite-scroll-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 30px; /* 两行之间的间距 */
+  overflow: hidden;
+  padding: 20px 0;
+  width: 100%;
+}
+
+/* 滚动轨道容器 */
+.scroll-row {
+  width: 100%;
+  overflow: hidden;
+}
+
+/* 实际滑动的长条 */
+.scroll-track {
+  display: flex;
+  width: max-content; /* 核心：由内容撑开总宽度 */
+  will-change: transform;
+}
+
+/* 每一组卡片的包裹 */
+.scroll-group {
+  display: flex;
+  gap: 30px; /* 卡片之间的间距 */
+  padding-right: 30px; /* 确保克隆组拼接时间距一致 */
+}
+
+/* 🌟 第一行动画：向左 */
+.row-left .scroll-track {
+  animation: scrollLeft 20s linear infinite;
+}
+
+/* 🌟 第二行动画：反向（向右） */
+.row-right .scroll-track {
+  animation: scrollLeft 22s linear infinite reverse; /* 稍微改变时间可以产生错位感 */
+}
+
+/* 悬停时停止，方便用户点击查看 */
+.infinite-scroll-wrapper:hover .scroll-track {
+  animation-play-state: paused;
+}
+
+/* 定义无限滚动关键帧 */
+@keyframes scrollLeft {
+  0% {
+    transform: translateX(0);
   }
-
-  /* C. 🌟 核心修改：自定义 JobCard 样式 */
-  :deep(.job-card) {
-    border-radius: 20px !important;
-    
-    /* 1. 🎨 背景微调：纯白实体，拒绝通透，增加分量感 */
-    background: #ffffff !important; 
-    
-    /* 2. 🎨 边框微调：使用极淡的灰蓝色，比纯白描边更有细节 */
-    border: 1px solid rgba(64, 158, 255, 0.08) !important; 
-    
-    /* 3. 🌟 投影微调：双重阴影 (一个实阴影增加厚度，一个散阴影增加氛围) */
-    box-shadow: 
-      0 10px 30px rgba(0, 0, 0, 0.03), /* 散阴影 */
-      0 2px 4px rgba(64, 158, 255, 0.02) !important; /* 微弱蓝色实阴影，增加厚度 */
-      
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    cursor: pointer;
-    overflow: hidden;
-    position: relative;
-
-    /* 4. 🌟 交互反馈美化 (Hover) */
-    &:hover {
-      transform: translateY(-8px); /* 向上浮起 */
-      
-      /* 悬停时投影变深、变散，产生强烈的“离地”感 */
-      box-shadow: 0 20px 50px rgba(64, 158, 255, 0.12) !important; 
-      
-      /* 悬停时增加蓝色发光描边 */
-      border-color: rgba(64, 158, 255, 0.4) !important; 
-    }
-
-    /* 5. 🎨 可选：给卡片顶部加一条极细的渐变彩色光条，增加 AI 科技感 */
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, #409EFF, #67C23A);
-      opacity: 0; /* 默认隐藏 */
-      transition: opacity 0.3s;
-    }
-    &:hover::before { opacity: 0.8; } /* 悬停时显示 */
+  100% {
+    /* 移动总宽度的一半（即移动完一整组卡片） */
+    transform: translateX(-50%);
   }
+}
+
+/* ⚠️ 必须给 JobCard 及其容器设定固定宽度，否则横向滚动会塌陷 */
+:deep(.job-card) {
+  flex: 0 0 350px; /* 这里的 350px 建议根据你卡片的实际设计尺寸调整 */
+  width: 350px;
+}
 }
 
 /* 右侧卡片专属呈现样式 */
@@ -1700,7 +1838,7 @@ const handleResize = () => {
     width: 100%; height: 100%;
     z-index: -3;
     pointer-events: none;
-    background: #f8faff;
+    background: radial-gradient(circle at center, #f8faff 0%, transparent 50%);
   }
 
 
@@ -1733,8 +1871,8 @@ const handleResize = () => {
     height: 100%;
     z-index: -2; /* 在最底层 */
     background: 
-      radial-gradient(circle at 45% 25%, rgba(159, 200, 251, 0.568) 0%, transparent 45%), 
-      radial-gradient(circle at 60% 65%, rgba(201, 163, 244, 0.366) 0%, transparent 30%);
+      radial-gradient(circle at 45% 25%, rgba(202, 229, 253, 0.654) 0%, transparent 35%), 
+      radial-gradient(circle at 60% 65%, rgba(201, 163, 244, 0.267) 0%, transparent 30%);
     filter: blur(10px); /* 稍微减小模糊值，让色彩焦点更凝聚 */
     animation: quantumGlow 15s ease-in-out infinite alternate;
   }
@@ -1912,8 +2050,7 @@ const handleResize = () => {
   width: 120px; height: 120px;
   top: 10%; left: 45%;
   transform: translateZ(100px); /* 最靠前 */
-  background: linear-gradient(135deg, #cae0f7 0%, #d8c4ef 100%) !important; 
-  .label { color: #ffffff !important; font-size: 15px; font-weight: 700; } /* 激活态取消位移反馈 */
+  background: linear-gradient(135deg, #abcff6 0%, #c4efeb 100%) !important; 
 }
 
 /* sphere-4：右上 (网络安全) */
@@ -2026,11 +2163,22 @@ const handleResize = () => {
 
 /* ======= E. 动画定义 ======= */
 /* 核心：模仿 Mobbin 的轻微随机漂浮感 */
+/* 修改后的更大幅度浮动动画 */
 @keyframes floatRandomly {
-  0% { transform: translateY(0) rotate(0deg) translateZ(calc(inherit)); }
-  33% { transform: translateY(-10px) rotate(2deg); }
-  66% { transform: translateY(5px) translateX(5px) rotate(-1deg); }
-  100% { transform: translateY(0) rotate(0deg); }
+  0% { 
+    transform: translateY(0) rotate(0deg) translateZ(0); 
+  }
+  33% { 
+    /* 向上位移加大，增加左右摇摆 */
+    transform: translateY(-35px) translateX(-10px) rotate(6deg) translateZ(10px); 
+  }
+  66% { 
+    /* 向下位移加大，反向旋转 */
+    transform: translateY(20px) translateX(15px) rotate(-5deg) translateZ(-5px); 
+  }
+  100% { 
+    transform: translateY(0) rotate(0deg) translateZ(0); 
+  }
 }
 
 @keyframes Blink {
@@ -2092,5 +2240,3 @@ const handleResize = () => {
   }
 }
 </style>
-
-
