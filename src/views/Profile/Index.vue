@@ -21,10 +21,10 @@
         <el-icon><DocumentCopy /></el-icon>
         <span>报告优化与导出</span>
       </el-menu-item>
-      <el-menu-item index="favorite">
-        <el-icon><Star /></el-icon>
-        <span>目标岗位</span>
-      </el-menu-item>
+      <el-menu-item index="favorite" class="menu-item-bottom">
+      <el-icon><Star /></el-icon>
+      <span>目标岗位</span>
+    </el-menu-item>
     </el-menu>
     </aside>
 
@@ -245,6 +245,7 @@ const scrollToBottom = async () => {
 /* 侧边栏整体重构 */
 .sidebar {
   width: 260px;
+  height: 93vh;
   background: rgba(255, 255, 255, 0.4); /* 半透明背景 */
   backdrop-filter: blur(20px); /* 毛玻璃效果 */
   border-right: 1px solid rgba(255, 255, 255, 0.5);
@@ -268,10 +269,16 @@ const scrollToBottom = async () => {
   }
 
   /* 菜单样式定制 */
+  /* 菜单样式定制 */
   .el-menu {
     border: none;
     background: transparent;
-    padding: 0 16px;
+    padding: 0 16px 20px;
+    
+    /* 🌟 必须：开启 flex 布局 */
+    display: flex;
+    flex-direction: column;
+    height: calc(100% - 160px); /* 减去上方头像占用的空间 */
 
     .el-menu-item {
       height: 54px;
@@ -298,12 +305,65 @@ const scrollToBottom = async () => {
         background: linear-gradient(135deg, #bbd7f6a3 0%, #ffffffb6 100%) !important;
         color: #221b4f !important;
         box-shadow: 0 4px 12px rgba(75, 98, 162, 0.3);
-        
-        /* 激活时的图标/文字阴影 */
-        span {
-          font-weight: 600;
-        }
       }
+
+&.menu-item-bottom {
+  margin-top: auto !important;
+  margin-bottom: 20px;
+  
+  /* 🌟 1. 强制去掉任何背景色和边框，保持透明 */
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+
+  /* 文字和图标默认状态 */
+  span {
+    font-size: 14px;
+    color: #64748b;
+    transition: all 0.3s ease; /* 确保字号变化平滑 */
+  }
+  
+  :deep(.el-icon) {
+    font-size: 18px;
+    color: #64748b;
+    transition: all 0.3s ease;
+  }
+
+  /* 🌟 2. 鼠标悬停：只改颜色和字号 */
+  &:hover {
+    background: transparent !important; /* 再次确保没有背景 */
+    transform: none !important;        /* 去掉之前的位移动画 */
+    
+    span {
+      color: #4f46e5 !important;       /* 变成深紫色 */
+      font-size: 16px !important;      /* 字号变大 */
+      font-weight: 600 !important;
+    }
+    
+    :deep(.el-icon) {
+      color: #4f46e5 !important;       /* 图标同步变色 */
+      font-size: 20px !important;      /* 图标同步变大 */
+    }
+  }
+
+  /* 🌟 3. 点击选中（激活状态）：只改颜色和字号 */
+  &.is-active {
+    background: transparent !important; /* 强制透明 */
+    box-shadow: none !important;
+    
+    span {
+      color: #1e1b4b !important;       /* 选中的文字颜色更深 */
+      font-size: 16px !important;      /* 保持变大的状态 */
+      font-weight: 700 !important;
+    }
+    
+    :deep(.el-icon) {
+      color: #1e1b4b !important;
+      font-size: 20px !important;
+    }
+  }
+}
     }
   }
 }

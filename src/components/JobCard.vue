@@ -19,7 +19,11 @@
     </div>
 
     <!-- 操作按钮 -->
-    <el-button type="primary" plain size="small" style="width: 100%; margin-top: 10px;">
+    <el-button 
+      class="analysis-btn" 
+      size="small"
+    >
+      <el-icon class="btn-icon"><DataLine /></el-icon>
       查看岗位画像
     </el-button>
   </div>
@@ -69,6 +73,45 @@ const getMatchColor = (rate) => {
   background-color: #ecf5ff;
   border-color: #409EFF;
   position: relative; /* 别忘了这个，否则 before 会乱跑 */
+}
+
+.analysis-btn {
+  width: 100%;
+  margin-top: 12px;
+  height: 36px;
+  border-radius: 18px !important; /* 胶囊形状 */
+  border: 1px solid rgba(64, 158, 255, 0.3) !important;
+  background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%) !important;
+  color: #409eff !important;
+  font-weight: 600;
+  letter-spacing: 1px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  .btn-icon {
+    font-size: 14px;
+    transition: transform 0.3s;
+  }
+
+  &:hover {
+    /* 悬浮时的状态：背景略微加深，投影增强 */
+    background: linear-gradient(135deg, #e1f0ff 0%, #f0f7ff 100%) !important;
+    border-color: #409eff !important;
+    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.2) !important;
+    transform: translateY(-1px);
+
+    .btn-icon {
+      transform: scale(1.2) rotate(5deg);
+    }
+  }
+
+  &:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 6px rgba(64, 158, 255, 0.1) !important;
+  }
 }
 
 .job-card.is-active::before {

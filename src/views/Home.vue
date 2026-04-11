@@ -86,23 +86,46 @@
 
           <div class="popover-ai-content">
             <div class="pop-header">
-              <el-icon><DataAnalysis /></el-icon>
-              <span>AI 实时环境观测</span>
+              <el-icon class="ai-pulse"><MagicStick /></el-icon>
+              <span>AI 智能入职预测</span>
             </div>
-            <div class="insight-grid">
-              <div class="insight-item">
-                <span class="label">演进预测：</span>
-                <span class="value">{{ category.insight.forecast }}</span>
+
+            <div class="prediction-main">
+              <div class="predict-item">
+                <div class="predict-label-row">
+                  <span class="label">入职胜率预测</span>
+                  <span class="value success-text">{{ calculateWinRate(category) }}%</span>
+                </div>
+                <el-progress 
+                  :percentage="calculateWinRate(category)" 
+                  :stroke-width="8" 
+                  :show-text="false"
+                  color="#67c23a" 
+                />
+                <p class="base-info">基于你的竞争力评分: <strong>{{ competitivenessScore }}</strong></p>
               </div>
-              <div class="insight-item">
-                <span class="label">画像匹配：</span>
-                <el-progress :percentage="parseInt(category.insight.deviation)" :stroke-width="6" />
+
+              <div class="salary-forecast-card">
+                <div class="forecast-item">
+                  <span class="f-label">预估谈薪溢价</span>
+                  <span class="f-value">+{{ calculateSalaryPremium(category) }}%</span>
+                </div>
+                <div class="scarcity-info">
+                  <span class="s-label">核心稀缺度：</span>
+                  <el-tag size="mini" type="warning" effect="dark">
+                    {{ category.insight.scarcity || '高需求' }}
+                  </el-tag>
+                </div>
               </div>
             </div>
+
             <el-divider border-style="dashed" style="margin: 12px 0" />
+
             <div class="mentor-suggestion">
-              <span class="suggestion-label">🤖 导师指令：</span>
-              <p class="suggestion-text">{{ category.insight.decision }}</p>
+              <span class="suggestion-label">🤖 Agent 策略决策：</span>
+              <p class="suggestion-text">
+                {{ generateAgentDecision(category) }}
+              </p>
             </div>
           </div>
         </el-popover>
@@ -144,7 +167,7 @@
         </div>
       </section>
 
-      <!-- 右列：登录/用户状态卡片 -->
+      <!-- 右列 -->
       <section class="right-panel">
   <el-card class="panel-card roadmap-focus-card" @mouseenter="stopAutoPlay" @mouseleave="startAutoPlay">
     <div class="ai-status-bar">
@@ -154,49 +177,76 @@
 
     <div class="stack-viewport">
       <div :class="['stack-item', isFrontPage ? 'is-front' : 'is-back']">
-        <div class="target-section">
-          <div class="target-label">当前锚定目标 (Q3-Q4)</div>
-          <div class="target-title">资深前端开发工程师 (P6)</div>
-          <div class="match-score-group">
-            <div class="score-item"><span class="score-num">78%</span><span class="score-text">能力匹配度</span></div>
-            <div class="divider"></div>
-            <div class="score-item"><span class="score-num">+15%</span><span class="score-text">预估胜率涨幅</span></div>
+        <div :class="['stack-item', isFrontPage ? 'is-front' : 'is-back']">
+          <div class="mini-profile">
+            <el-avatar :size="40" src="你的头像地址" />
+            <div class="profile-text">
+              <div class="user-name">user <el-tag size="mini" type="success">就绪</el-tag></div>
+              <div class="user-sub">xxx大学 · 计算机科学与技术</div>
+            </div>
           </div>
-        </div>
-        <div class="vertical-roadmap">
-          <div class="step-item past">
-             <div class="step-icon"><el-icon><SuccessFilled /></el-icon></div>
-             <div class="step-title">已达成：画像构建 (P1)</div>
-          </div>
-          <div class="step-item active">
-             <div class="step-icon"><div class="active-ring"></div></div>
-             <div class="step-title highlight">进行中：实习求职冲刺</div>
-          </div>
-          </div>
+  <div class="target-section">
+    <div class="target-label">个人数字资产 (Real-time)</div>
+    <div class="target-title">当前职场画像状态</div>
+    <div class="match-score-group">
+      <div class="score-item">
+        <span class="score-num">{{ skillCompleteness }}%</span>
+        <span class="score-text">技能完整度</span>
+      </div>
+      <div class="divider"></div>
+      <div class="score-item">
+        <span class="score-num">{{ competitivenessScore }}</span>
+        <span class="score-text">竞争力评分</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="daily-todo-section">
+    <div class="todo-header">
+      <el-icon><Calendar /></el-icon> 每日待办 (同步自 Agent)
+    </div>
+    <div class="todo-list-mini">
+      <div v-for="task in dailyTasks" :key="task.id" class="mini-todo-item">
+        <el-checkbox v-model="task.completed" class="custom-todo-check">
+          <span :class="['todo-text', { 'is-completed': task.completed }]">
+            {{ task.content }}
+          </span>
+        </el-checkbox>
+      </div>
+    </div>
+  </div>
+</div>
       </div>
 
       <div :class="['stack-item', !isFrontPage ? 'is-front' : 'is-back']">
-        <div class="target-section">
-          <div class="target-label">能力模型分析</div>
-          <div class="target-title">深度洞察报告</div>
-        </div>
-        
-        <div class="analysis-content">
-          <div class="skill-mini-row">
-            <div class="skill-info"><span>工程化水平</span><span>60%</span></div>
-            <el-progress :percentage="60" :show-text="false" stroke-width="4" />
-          </div>
-          <div class="skill-mini-row" style="margin-top: 15px;">
-            <div class="skill-info"><span>业务架构</span><span>85%</span></div>
-            <el-progress :percentage="85" :show-text="false" stroke-width="4" color="#67c23a" />
-          </div>
-        </div>
-
-        <div class="ai-agent-suggestion-card">
-           <div class="sug-header">🤖 Agent 指令：</div>
-           <p>检测到 P2 阶段核心阻塞。建议优先补齐 <strong>Vite 插件开发</strong> 经验，可大幅提升竞争力。</p>
-        </div>
+  <div class="target-section">
+    <div class="target-label">能力差距分析 (Gap Analysis)</div>
+    <div class="target-title">核心技能缺口诊断</div>
+  </div>
+  
+  <div class="gap-analysis-list">
+    <div v-for="gap in skillGaps" :key="gap.name" class="gap-row-item">
+      <div class="gap-info">
+        <span class="gap-name">{{ gap.name }}</span>
+        <span :class="['gap-tag', gap.level]">{{ gap.status }}</span>
       </div>
+      <el-progress 
+        :percentage="gap.percent" 
+        :stroke-width="6" 
+        :show-text="false"
+        :color="gap.color"
+      />
+    </div>
+  </div>
+
+  <div class="ai-agent-suggestion-card diagnosis">
+    <div class="sug-header">
+      <el-icon class="pulse-icon"><MagicStick /></el-icon>
+      <span>Agent 指令：</span>
+    </div>
+    <p class="advice-text">{{ shortAgentAdvice }}</p>
+  </div>
+</div>
     </div>
 
     <el-button type="primary" class="full-path-link" round @click="$router.push('/growth-tracking')">
@@ -334,9 +384,47 @@ import { hotJobs, userData } from '@/mock/data.js'
 import JobCard from '@/components/JobCard.vue'
 import gsap from 'gsap'
 
+// 计算胜率：个人分 / 岗位要求分 (假设 category 里有要求分)
+const calculateWinRate = (category) => {
+  const baseRate = 70; // 基础分
+  const scoreDiff = (competitivenessScore.value - 700) / 10; 
+  return Math.min(98, Math.max(40, Math.floor(baseRate + scoreDiff)));
+};
+
+// 计算溢价：基于稀缺度
+const calculateSalaryPremium = (category) => {
+  // 模拟：后端/AI 岗位溢价高，UI 岗位溢价平稳
+  return category.name.includes('AI') || category.name.includes('后端') ? 25 : 12;
+};
+
+// 动态生成建议
+const generateAgentDecision = (category) => {
+  const winRate = calculateWinRate(category);
+  if (winRate > 80) return "当前岗位与你画像高度契合，建议立即更新简历并投递。";
+  return "检测到核心技能缺口，建议优先完成右侧‘技能诊断’中的学习任务后再试。";
+};
+
 const currentPage = ref(1)
 const pageDirection = ref('slide-left')
 let autoPlayTimer = null
+
+const skillCompleteness = ref(82); // 来自 PersonalInfo 的同步
+const competitivenessScore = ref(75); // 来自 PersonalInfo 的同步
+
+// 这里的任务内容应与成长追踪中心 (GrowthTracker) 保持同步
+const dailyTasks = ref([
+  { id: 1, content: '完成 Vite 插件开发进阶课程', completed: false },
+  { id: 2, content: '优化 Neo4j 核心节点关联逻辑', completed: true },
+  { id: 3, content: '参与一次开源项目代码评审', completed: false }
+]);
+
+const skillGaps = ref([
+  { name: '工程化架构', status: '缺失', level: 'danger', percent: 25, color: '#f56c6c' },
+  { name: 'TypeScript 高级用法', status: '尚浅', level: 'warning', percent: 50, color: '#e6a23c' },
+  { name: 'Node.js 服务端', status: '待加强', level: 'info', percent: 75, color: '#409eff' }
+]);
+
+const shortAgentAdvice = "系统检测到你的‘工程化架构’能力与目标岗位存在较大偏差。建议本周优先完成 Agent 在成长中心为你分配的 Docker 基础任务，预计可提升核心匹配度 8%。";
 
 // 🌟 新增：层级切换逻辑
 const isFrontPage = ref(true)
@@ -1140,6 +1228,59 @@ const handleResize = () => {
   }
 }
 
+.popover-ai-content {
+  .ai-pulse {
+    color: #409eff;
+    animation: breath 2s infinite;
+  }
+
+  .prediction-main {
+    .predict-item {
+      margin-bottom: 15px;
+      .predict-label-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-bottom: 6px;
+        .label { font-size: 13px; color: #606266; }
+        .value { font-size: 20px; font-weight: bold; }
+        .success-text { color: #67c23a; }
+      }
+      .base-info { font-size: 11px; color: #909399; margin-top: 5px; }
+    }
+
+    .salary-forecast-card {
+      background: rgba(103, 194, 58, 0.08);
+      border-radius: 8px;
+      padding: 10px;
+      .forecast-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 5px;
+        .f-label { color: #67c23a; font-size: 12px; font-weight: bold; }
+        .f-value { color: #67c23a; font-size: 16px; font-weight: bold; }
+      }
+      .scarcity-info {
+        font-size: 11px;
+        color: #909399;
+      }
+    }
+  }
+
+  .mentor-suggestion {
+    background: #f0f7ff;
+    padding: 10px;
+    border-radius: 6px;
+    .suggestion-label { color: #409eff; font-weight: bold; font-size: 12px; }
+    .suggestion-text { font-size: 12px; color: #606266; margin: 4px 0 0; }
+  }
+}
+
+@keyframes breath {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.1); }
+}
+
 .middle-panel {
   display: flex;          /* 🌟 开启布局 */
   flex-direction: column; /* 纵向排列 */
@@ -1374,6 +1515,146 @@ const handleResize = () => {
 /* ========================================================== */
 /* 🎨 登录面板美化：AI 科技感 + 毛玻璃材质 */
 /* ========================================================== */
+
+/* 每日待办区域样式 */
+.daily-todo-section {
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 12px;
+  border: 1px solid rgba(220, 223, 230, 0.5);
+
+  .todo-header {
+    font-size: 13px;
+    font-weight: bold;
+    color: #606266;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    
+    .el-icon { color: #409eff; }
+  }
+
+  .todo-list-mini {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    .mini-todo-item {
+      padding: 8px 12px;
+      background: #ffffff;
+      border-radius: 8px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid transparent;
+
+      &:hover {
+        border-color: #d1e9ff;
+        transform: translateX(5px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      }
+
+      .custom-todo-check {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        
+        :deep(.el-checkbox__label) {
+          padding-left: 10px;
+          flex: 1;
+        }
+      }
+
+      .todo-text {
+        font-size: 13px;
+        color: #303133;
+        transition: all 0.3s;
+        
+        &.is-completed {
+          color: #c0c4cc;
+          text-decoration: line-through;
+        }
+      }
+    }
+  }
+}
+
+/* 缺口罗列样式 */
+.gap-analysis-list {
+  margin: 15px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  .gap-row-item {
+    .gap-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      
+      .gap-name {
+        font-size: 13px;
+        color: #303133;
+        font-weight: 500;
+      }
+      
+      .gap-tag {
+        font-size: 11px;
+        padding: 2px 8px;
+        border-radius: 10px;
+        &.danger { background: #fef0f0; color: #f56c6c; }
+        &.warning { background: #fdf6ec; color: #e6a23c; }
+        &.info { background: #f4f4f5; color: #909399; }
+      }
+    }
+  }
+}
+
+/* Agent 建议增强 */
+.ai-agent-suggestion-card.diagnosis {
+  margin-top: 20px;
+  background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%);
+  border: 1px solid #d1e9ff;
+  border-left: 4px solid #409eff;
+  
+  .advice-text {
+    font-size: 12px;
+    line-height: 1.6;
+    color: #606266;
+    margin: 8px 0 0;
+  }
+}
+
+/* 呼吸灯动画：增加AI感 */
+.pulse-icon {
+  animation: breath 2s infinite ease-in-out;
+}
+@keyframes breath {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.7; }
+}
+
+.mini-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 15px;
+  border-bottom: 1px dashed #ebeef5;
+  
+  .user-name {
+    font-size: 16px;
+    font-weight: bold;
+    color: #303133;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .user-sub {
+    font-size: 12px;
+    color: #909399;
+    margin-top: 2px;
+  }
+}
 
 .auth-card {
   border-radius: 24px !important;
@@ -1644,7 +1925,9 @@ const handleResize = () => {
 /* 滚动轨道容器 */
 .scroll-row {
   width: 100%;
+  height:210px; /* 固定高度，确保卡片完全显示 */
   overflow: hidden;
+  background-color: #fafbfc00;
 }
 
 /* 实际滑动的长条 */
@@ -1652,6 +1935,7 @@ const handleResize = () => {
   display: flex;
   width: max-content; /* 核心：由内容撑开总宽度 */
   will-change: transform;
+  transition: animation-play-state 0.3s ease;
 }
 
 /* 每一组卡片的包裹 */
@@ -1659,6 +1943,7 @@ const handleResize = () => {
   display: flex;
   gap: 30px; /* 卡片之间的间距 */
   padding-right: 30px; /* 确保克隆组拼接时间距一致 */
+  padding-top: 5px;
 }
 
 /* 🌟 第一行动画：向左 */
@@ -1671,9 +1956,18 @@ const handleResize = () => {
   animation: scrollLeft 22s linear infinite reverse; /* 稍微改变时间可以产生错位感 */
 }
 
-/* 悬停时停止，方便用户点击查看 */
-.infinite-scroll-wrapper:hover .scroll-track {
-  animation-play-state: paused;
+.scroll-row {
+  width: 100%;
+  overflow: hidden;
+  /* 确保 hover 判定范围覆盖整行 */
+  padding: 10px 0; 
+  
+  /* 当鼠标悬停在这一行时，仅这一行的轨道停止动画 */
+  &:hover {
+    .scroll-track {
+      animation-play-state: paused;
+    }
+  }
 }
 
 /* 定义无限滚动关键帧 */
@@ -1687,11 +1981,113 @@ const handleResize = () => {
   }
 }
 
-/* ⚠️ 必须给 JobCard 及其容器设定固定宽度，否则横向滚动会塌陷 */
+/* 🌟 核心：针对每个卡片容器的深度美化 */
 :deep(.job-card) {
-  flex: 0 0 350px; /* 这里的 350px 建议根据你卡片的实际设计尺寸调整 */
-  width: 350px;
+  /* 基础形状与尺寸 */
+  flex: 0 0 340px; 
+  width: 340px;
+  height: 150px; /* 固定高度保持整齐 */
+  margin: 10px 15px; /* 给阴影留出扩散空间 */
+  
+  /* 玻璃拟态质感 */
+  background: rgba(255, 255, 255, 0.65) !important;
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  
+  /* 精致边框：模拟玻璃边缘亮光 */
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  border-radius: 20px !important;
+  
+  /* 弥散投影：极其轻微，防止浅色页面显得脏 */
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.04) !important;
+  
+  /* 动画过渡 */
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1) !important;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+
+  /* 悬停效果：保持滚动的同时增强视觉反馈 */
+  &:hover {
+    background: rgba(255, 255, 254, 0.538) !important;
+    transform: translateY(-8px) scale(1.03) !important; /* 向上轻微浮起 */
+    box-shadow: 0 15px 45px rgba(137, 233, 250, 0.15) !important; /* 浅蓝色光晕 */
+    border-color: rgba(70, 168, 171, 0.4) !important;
+    
+    /* 装饰：悬停时左侧出现彩色亮条 */
+    &::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 5px;
+      background: linear-gradient(to bottom, #b9f2fc, #e599f857);
+    }
+  }
+
+  /* 内部内容排版美化建议 */
+  .el-card__body {
+    padding: 20px 24px !important;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  /* 职位名称 */
+  .job-name {
+    font-size: 17px;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+  }
+
+  /* 公司与薪资行 */
+  .job-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    .company-name {
+      font-size: 13px;
+      color: #909399;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .salary-tag {
+      font-size: 15px;
+      font-weight: 800;
+      color: #f39c12; /* 高级感的琥珀色 */
+      background: rgba(243, 156, 18, 0.08);
+      padding: 2px 10px;
+      border-radius: 8px;
+    }
+  }
 }
+
+/* 🌟 优化轨道遮罩，让两端消失感更自然 */
+.infinite-scroll-wrapper {
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 15%,
+    black 85%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 15%,
+    black 85%,
+    transparent 100%
+  );
+}
+
+
 }
 
 /* 右侧卡片专属呈现样式 */
@@ -1723,6 +2119,7 @@ const handleResize = () => {
 .target-section {
   text-align: center;
   margin-bottom: 35px; /* 增加 Margin 填补空间 */
+  margin-top: 10px;
   .target-label { font-size: 12px; color: #909399; }
   .target-title { font-size: 18px; font-weight: bold; color: #303133; margin: 6px 0 10px; }
   
@@ -1736,59 +2133,6 @@ const handleResize = () => {
   }
 }
 
-/* 垂直路径轴：深化“进行中”阶段 */
-.vertical-roadmap {
-  position: relative;
-  padding-left: 12px;
-  border-left: 1px dashed #dcdfe6;
-  margin-left: 18px;
-  flex: 1; /* 占据剩余的大部分垂直空间 */
-
-  .step-item {
-    position: relative;
-    padding-left: 28px;
-    padding-bottom: 30px; /* 增加间距 */
-    
-    .step-icon {
-      position: absolute; left: -24px; top: 0;
-      background: #fff; width: 22px; height: 22px;
-      display: flex; align-items: center; justify-content: center;
-    }
-
-    .step-title { font-size: 13px; font-weight: 500; color: #606266; }
-    .step-desc { font-size: 11px; color: #999; margin-top: 2px; }
-  }
-
-  /* 重点深化的进行中节点 */
-  .active {
-    padding-bottom: 40px; /* 给 Action Card 更多空间 */
-    .active-ring {
-      width: 14px; height: 14px; background: #409eff; border-radius: 50%;
-      box-shadow: 0 0 0 0 rgba(64, 158, 255, 0.5); animation: pulse 2s infinite;
-    }
-    .step-tag { font-size: 10px; color: #409eff; font-weight: bold; margin-bottom: 5px; }
-    .highlight { color: #409eff; font-weight: bold; font-size: 15px; }
-    
-    /* 丰富内容：Agent 建议细节 */
-    .ai-agent-suggestion {
-      margin-top: 10px; background: rgba(64, 158, 255, 0.05);
-      border-left: 3px solid #409eff; padding: 10px 12px; border-radius: 6px;
-      .sug-header { font-size: 12px; color: #303133; font-weight: bold; margin-bottom: 5px; }
-      p { font-size: 11px; color: #475569; margin: 0; line-height: 1.6; }
-      .countdown { font-size: 10px; color: #999; margin-top: 6px; span { color: #f56c6c; font-weight: bold; font-size: 12px; } }
-    }
-  }
-
-  .past .step-icon { color: #67c23a; font-size: 20px; }
-  .future {
-    opacity: 0.6; padding-bottom: 0;
-    .step-icon { color: #c0c4cc; font-size: 18px; }
-    .predict-badge {
-      display: inline-block; font-size: 10px; color: #e6a23c; 
-      border: 1px solid #e6a23c; padding: 0 5px; border-radius: 3px; margin-top: 5px;
-    }
-  }
-}
 
 .full-path-link {
   width: 100%; margin-top: 20px; font-size: 13px;

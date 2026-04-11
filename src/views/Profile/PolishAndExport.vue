@@ -266,12 +266,12 @@ const handleDownload = () => {
   /* 🌟 修正：统一 ai-assistant-box 样式，确保毛玻璃生效 */
   .ai-assistant-box {
     flex-shrink: 0;
-    background: rgba(213, 213, 213, 0.171) !important;
+    background: rgba(255, 255, 255, 0.2) !important; // 极高的透明度
     backdrop-filter: blur(12px) saturate(180%) !important;
     padding: 20px !important;
     border-radius: 20px !important;
-    border: 1px solid rgba(255, 255, 255, 0.8) !important;
-    box-shadow: 0 10px 40px rgba(148, 163, 184, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.4) !important; // 强调白色边缘
+    box-shadow: none !important; // 去掉沉重的阴影
     margin-bottom: 0; // 移除多余间距
 
     /* 🌟 核心修改：输入框包装器模拟图一的纯白悬浮感 */
@@ -280,7 +280,7 @@ const handleDownload = () => {
       border-radius: 12px;
       padding: 12px;
       border: none !important; // 移除图二看到的灰色边框
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important; // 极淡阴影增加层级
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04) !important; // 极淡阴影增加层级
       
       :deep(.el-textarea__inner) {
         border: none !important;
@@ -330,7 +330,7 @@ const handleDownload = () => {
 
   .history-module {
     flex: 1;
-    background: rgba(217, 217, 217, 0.12);
+    background: rgba(255, 255, 255, 0.2) !important; // 极高的透明度
     padding: 18px;
     border-radius: 16px;
     border: 1px solid #eef2f6;
@@ -344,7 +344,7 @@ const handleDownload = () => {
       padding-right: 4px;
 
       .history-card {
-        background: #fffdfe;
+        background: #b1bcc11f;
         border-radius: 10px;
         padding: 12px;
         margin-bottom: 10px;
@@ -441,7 +441,7 @@ const handleDownload = () => {
 
 .download-btn {
   margin: 0 !important;
-  background: linear-gradient(135deg, #c6ebf2 0%, #ecf4f75d 100%) !important;
+  background: linear-gradient(135deg, #f2fbfd 0%, #e6f7fc5d 100%) !important;
   color: rgb(74, 72, 72) !important;
   font-weight: bold;
   box-shadow: 0 6px 18px rgba(45, 212, 191, 0.15) !important;

@@ -1,81 +1,105 @@
 // src/mock/data.js
 
-// 1. 热门岗位 (3 个)
 export const hotJobs = [
   {
     id: 1,
-    title: '高级前端工程师',
-    jobTitle: '高级前端工程师', // 兼容 JobCard.vue
-    company: '阿里云',
-    companyName: '阿里云', // 兼容 JobCard.vue
-    location: '杭州',
-    matchRate: 92,
-    tags: ['Vue3', 'TypeScript', 'AI']
+    jobTitle: 'Java 开发工程师',
+    companyName: '点击率科技有限公司',
+    location: '哈尔滨',
+    matchRate: 95,
+    salary: '7.0k - 9.0k',
+    tags: ['数据抓取', 'AI对接', 'Python'],
+    raw: { industry: '计算机软件' } // 存储原始信息备用
   },
   {
     id: 2,
-    title: 'AI 算法专家',
-    jobTitle: 'AI 算法专家',
-    company: '达摩院',
-    companyName: '达摩院',
-    location: '北京',
-    matchRate: 85,
-    tags: ['Python', 'PyTorch', 'NLP']
+    jobTitle: '测试工程师',
+    companyName: '沈阳易诚金软',
+    location: '沈阳',
+    matchRate: 88,
+    salary: '2.0k - 3.0k',
+    tags: ['金融科技', 'APP测试', '实习转正'],
+    raw: { industry: '证券/期货' }
   },
   {
     id: 3,
-    title: '产品运营经理',
-    jobTitle: '产品运营经理',
-    company: '淘宝',
-    companyName: '淘宝',
-    location: '上海',
-    matchRate: 78,
-    tags: ['数据分析', '用户增长']
+    jobTitle: '软件测试',
+    companyName: '河南端琪实业',
+    location: '漯河',
+    matchRate: 82,
+    salary: '5.4k - 9.7k',
+    tags: ['性能测试', '包住宿', '系统测试'],
+    raw: { industry: '电子设备制造' }
   },
   {
     id: 4,
-    jobTitle: '产品运营经理',
-    companyName: '淘宝',
-    location: '上海',
-    matchRate: 78,
-    salary: '20k - 40k',
-    tags: ['数据驱动', '用户增长', 'SQL']
+    jobTitle: 'C/C++ 开发工程师',
+    companyName: '易通星云',
+    location: '北京',
+    matchRate: 90,
+    salary: '18k - 28k',
+    tags: ['北斗导航', 'Windows', 'Socket'],
+    raw: { industry: 'IT服务' }
   },
   {
     id: 5,
-    jobTitle: '后端架构师 (Go/Java)',
-    companyName: '字节跳动',
-    location: '深圳',
-    matchRate: 88,
-    salary: '40k - 70k',
-    tags: ['高并发', '微服务', 'K8s']
+    jobTitle: '测试工程师',
+    companyName: '南高齿集团',
+    location: '淮安',
+    matchRate: 94,
+    salary: '10k - 12.5k',
+    tags: ['上市公司', '机械检测', '五险一金'],
+    raw: { industry: '通用设备制造' }
   },
   {
     id: 6,
-    jobTitle: '数据分析科学家',
-    companyName: '百度',
-    location: '北京',
-    matchRate: 95,
-    salary: '30k - 55k',
-    tags: ['建模', '特征工程', 'PySpark']
+    jobTitle: 'C/C++ 软件开发',
+    companyName: '上海墨向机械',
+    location: '上海',
+    matchRate: 86,
+    salary: '8.0k - 15k',
+    tags: ['航空航天', 'WPF', 'MySQL'],
+    raw: { industry: '专用设备制造' }
   },
   {
     id: 7,
-    jobTitle: '全栈开发工程师',
-    companyName: '腾讯 · 微信',
-    location: '广州',
-    matchRate: 82,
-    salary: '35k - 65k',
-    tags: ['Node.js', 'React', '分布式']
+    jobTitle: '科研人员',
+    companyName: '山东元泰生物',
+    location: '日照',
+    matchRate: 98,
+    salary: '20k - 40k',
+    tags: ['博士岗', '生物工程', '代谢分析'],
+    raw: { industry: '生物工程' }
   },
   {
     id: 8,
-    jobTitle: '网络安全攻防专家',
-    companyName: '奇安信',
-    location: '成都',
-    matchRate: 90,
-    salary: '28k - 50k',
-    tags: ['渗透测试', '零信任', '溯源']
+    jobTitle: '实施工程师',
+    companyName: '重庆制导科技',
+    location: '重庆',
+    matchRate: 75,
+    salary: '1.2k - 2.4k',
+    tags: ['微电子', '嵌入式', '重邮校内'],
+    raw: { industry: '企业服务' }
+  },
+  {
+    id: 9,
+    jobTitle: '技术支持工程师',
+    companyName: '四川大禹机械',
+    location: '自贡',
+    matchRate: 80,
+    salary: '4.0k - 8.0k',
+    tags: ['专精特新', '技术销售', '机械密封'],
+    raw: { industry: '通用设备制造' }
+  },
+  {
+    id: 10,
+    jobTitle: 'AI 科研人员',
+    companyName: '北航青岛研究院',
+    location: '青岛',
+    matchRate: 96,
+    salary: '30k - 50k',
+    tags: ['AI for Science', '大模型', '博士'],
+    raw: { industry: '人工智能' }
   }
 ];
 
@@ -146,7 +170,7 @@ export const allJobs = [
 
 // 3. 用户数据
 export const userData = {
-  name: '李伟华',
+  name: 'user',
   avatar: 'https://via.placeholder.com/150',
   isLoggedIn: true,
   skills: {

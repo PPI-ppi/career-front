@@ -56,18 +56,9 @@
         <template #header>
           <span>岗位要求画像</span>
         </template>
-        <div v-if="loading" class="skeleton">
-          <el-skeleton :rows="8" animated />
-        </div>
-        <div v-else-if="!job" class="empty-state">
-          <!-- 已在上面处理 -->
-        </div>
-        <div v-else class="requirements">
-          <ul>
-            <li v-for="(req, index) in job.requirements" :key="index">
-              {{ req }}
-            </li>
-          </ul>
+        <div class="graph-wrapper">
+          <div ref="graphContainer" class="graph-canvas"></div>
+          <el-button class="reset-btn" @click="resetView" circle icon="Refresh" />
         </div>
       </el-card>
     </main>
@@ -75,11 +66,78 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted,nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ArrowLeft, Star, StarFilled } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import rawData from '@/assets/data.json'
+import ForceGraph from 'force-graph'
+import neo4j from 'neo4j-driver'
+import { mockGraphData } from '@/assets/mockGraph.js'
+
+// --- 1. 引用和状态 ---
+const graphContainer = ref(null)
+let graphInstance = null
+
+// --- 2. Neo4j 连接配置 ---
+// 这里等同学发地址后，替换成 'bolt://xxx.cpolar.top:xxx'
+const NEO4J_URL = 'bolt://localhost:7687' 
+const driver = neo4j.driver(NEO4J_URL, neo4j.auth.basic('neo4j', 'password'))
+
+// --- 3. 初始化图谱函数 ---
+const initGraph = async () => {
+  if (!graphContainer.value) return
+  
+  // 初始化图谱实例
+  graphInstance = ForceGraph()(graphContainer.value)
+    .width(graphContainer.value.offsetWidth)
+    .height(400)
+    .nodeLabel('name')
+    .nodeAutoColorBy('label')
+    .linkDirectionalArrowLength(3.5)
+    .linkDirectionalArrowRelPos(1)
+    .backgroundColor('#ffffff')
+
+  graphInstance.graphData(mockGraphData)
+
+  // 获取数据
+  try {
+    const session = driver.session()
+    // 注意：这里查询的是当前岗位相关的技能和要求
+    // 假设查询当前岗位名关联的节点
+    const cypher = `MATCH (j:Job {title: $jobTitle})-[r]->(m) RETURN j,r,m LIMIT 30`
+    const result = await session.run(cypher, { jobTitle: job.value?.title })
+    
+    // 数据转换逻辑 (将 Neo4j 结果转为 nodes/links)
+    const nodes = []
+    const links = []
+    result.records.forEach(record => {
+      const source = record.get('j')
+      const target = record.get('m')
+      
+      if (!nodes.find(n => n.id === source.identity.toString())) {
+        nodes.push({ id: source.identity.toString(), name: source.properties.title, label: 'Job' })
+      }
+      if (!nodes.find(n => n.id === target.identity.toString())) {
+        nodes.push({ id: target.identity.toString(), name: target.properties.name, label: 'Skill' })
+      }
+      links.push({ source: source.identity.toString(), target: target.identity.toString() })
+    })
+
+    graphInstance.graphData({ nodes, links })
+    session.close()
+  } catch (err) {
+    console.error('图谱加载失败，检查网络或IP:', err)
+  }
+}
+
+// 在页面挂载后启动
+onMounted(async () => {
+  await nextTick()
+  initGraph()
+})
+
+const resetView = () => graphInstance.zoomToFit(400)
 
 onMounted(async () => {
   loading.value = true
@@ -490,5 +548,33 @@ const toggleFavorite = () => {
   .main-content {
     padding: 15px;
   }
+}
+
+.graph-wrapper {
+  position: relative;
+  width: 100%;
+  height: 400px; /* 设定固定高度 */
+  background: #fdfdfd;
+  border-radius: 8px;
+  border: 1px solid #f0f2f5;
+  overflow: hidden;
+}
+
+.graph-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.reset-btn {
+  position: absolute;
+  right: 15px;
+  bottom: 15px;
+  z-index: 10;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+}
+
+/* 兼容 Element Plus 卡片内部间距 */
+:deep(.el-card__body) {
+  padding: 15px;
 }
 </style>

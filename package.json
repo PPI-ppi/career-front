@@ -20,8 +20,10 @@
     "echarts-wordcloud": "^2.1.0",
     "element-plus": "^2.13.5",
     "gsap": "^3.14.2",
+    "neo4j-driver": "^6.0.1",
     "pinia": "^3.0.4",
     "vue": "^3.5.29",
+    "vue-force-graph": "^0.1.2",
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
