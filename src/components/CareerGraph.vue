@@ -104,13 +104,11 @@ onUnmounted(() => {
     .el-icon { color: #409EFF; }
   }
 
-  .graph-container {
-    width: 100%;
-    height: 350px;
-    background: #ffffff;
-    border-radius: 12px;
-    border: 1px solid #f1f5f9;
-  }
+.graph-container {
+  background: radial-gradient(circle at center, #daf9fec9 0%, #f4f7e05f 100%);
+  /* 如果是深色模式 */
+  /* background: radial-gradient(circle at center, #1a1a2e 0%, #0f0f1b 100%); */
+}
 
   .graph-tip {
     font-size: 11px;

@@ -350,7 +350,7 @@
 
     <!-- 底部信息 -->
     <footer class="home-footer">
-      <p>© 2024 AI Career - 智能求职平台</p>
+      <p>© 2026 AI Career - 智能职业镜像平台</p>
       <p class="footer-links">
         <el-link type="info">公司简介</el-link>
         <span class="divider">|</span>
