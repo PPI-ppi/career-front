@@ -2,20 +2,24 @@
   <div class="job-detail">
     <!-- 顶部导航栏 -->
     <header class="header">
-      <h1>岗位详情</h1>
-      <div class="actions">
-        <el-button type="text" @click="goBack">
-          <el-icon><ArrowLeft /></el-icon>
-          返回
-        </el-button>
-        <el-button type="text" @click="toggleFavorite">
-          <el-icon :class="{ 'filled': isFavorited }">
-            <StarFilled v-if="isFavorited" />
-            <Star v-else />
-          </el-icon>
-        </el-button>
-      </div>
-    </header>
+  <div class="header-left">
+    <el-button class="back-btn" @click="goBack" link>
+      <el-icon><ArrowLeft /></el-icon>
+      <span>返回看板</span>
+    </el-button>
+  </div>
+  
+  <h1 class="page-title">岗位详情画像</h1>
+  
+  <div class="actions">
+    <el-button @click="toggleFavorite" link>
+      <el-icon :class="{ 'filled': isFavorited }">
+        <StarFilled v-if="isFavorited" />
+        <Star v-else />
+      </el-icon>
+    </el-button>
+  </div>
+</header>
 
     <!-- 主体内容区 -->
     <main class="main-content">
@@ -33,11 +37,10 @@
         </div>
       </el-card>
 
-      <!-- 岗位介绍 -->
-      <el-card class="card">
-        <template #header>
+      <el-card class="card intro-card"> <template #header>
           <span>岗位介绍</span>
         </template>
+        
         <div v-if="loading" class="skeleton">
           <el-skeleton :rows="6" animated />
         </div>
@@ -48,6 +51,8 @@
         </div>
         <div v-else class="description">
           <p>{{ job.description || '暂无详细描述' }}</p>
+          
+          <img src="@/assets/3D programmer.png" class="card-decoration" />
         </div>
       </el-card>
 
@@ -61,6 +66,28 @@
           <el-button class="reset-btn" @click="resetView" circle icon="Refresh" />
         </div>
       </el-card>
+
+      <el-card class="card promotion-card">
+        <template #header>
+          <div class="card-header">
+            <span>岗位换岗晋升图</span>
+          </div>
+        </template>
+
+        <div class="promotion-container">
+          <div v-if="loading" class="skeleton">
+            <el-skeleton :rows="8" animated />
+          </div>
+          <div v-else id="promotionGraph" class="graph-placeholder">
+            <el-empty description="晋升路径图加载中..." :image-size="100">
+              <template #description>
+                <p style="color: #909399;">正在生成职业发展路径，请稍候...</p>
+              </template>
+            </el-empty>
+          </div>
+        </div>
+      </el-card>
+
     </main>
   </div>
 </template>
@@ -122,37 +149,66 @@ const THIRD_LEVEL_COLORS = ['#7fb8ee', '#76d7ea', '#8de3c0', '#b6e39a', '#f3d999
 
   // 2. 初始化实例（不依赖外部 d3 变量）
 graphInstance = ForceGraph()(graphContainer.value)
+.backgroundColor('rgba(0,0,0,0)')
 .nodeCanvasObject((node, ctx, globalScale) => {
   const label = node.name;
-  const nodeRadius = node.val;
+  
+  // 💡 第一步：修正半径逻辑，手动覆盖 node.val
+  let currentRadius;
+  if (node.level === 1) {
+    currentRadius = 24; // 显著放大核心球
+  } else if (node.level === 2) {
+    currentRadius = 18; // 中等放大分类球
+  } else {
+    // 第三层保留原有的 val 或者根据字数自适应
+    currentRadius = node.val || 10; 
+  }
 
   // 1. 绘制圆形背景
   ctx.beginPath();
-  ctx.arc(node.x, node.y, nodeRadius, 0, 2 * Math.PI, false);
+// 💡 这里直接根据 level 判断，强制给 1、2 层大半径，其他用原来的 node.val
+  ctx.arc(node.x, node.y, node.level == 1 ? 70 : (node.level === 2 ? 45 : node.val), 0, 2 * Math.PI, false);  
+  // 为第一二层增加呼吸发光感（可选，增加突出度）
+  if (node.level <= 2) {
+    ctx.shadowColor = node.color;
+    ctx.shadowBlur = 10 / globalScale;
+  }
+  
   ctx.fillStyle = node.color;
   ctx.fill();
+  
+  // 恢复阴影并画白边
+  ctx.shadowBlur = 0;
   ctx.strokeStyle = '#ffffff';
   ctx.lineWidth = 1.5 / globalScale;
   ctx.stroke();
 
-  // 2. 文字配置
-  const fontSize = 11; // 稍微调小字号，增加容错
-  ctx.font = `500 ${fontSize}px Sans-Serif`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#001f3f';
+// 2. 文字配置 - 随球体大小动态调整字号
+// 💡 修改点：第一层 18px (中心)，第二层 14px (分类)，第三层 11px (细分)
+const fontSize = node.level === 1 ? 18 : (node.level === 2 ? 14 : 11);
 
-  // 3. 💡 智能换行逻辑
+// 保持粗细逻辑：第一二层加粗(600)，第三层正常(500)
+ctx.font = `${node.level <= 2 ? '600' : '500'} ${fontSize}px Sans-Serif`;
+
+ctx.textAlign = 'center';
+ctx.textBaseline = 'middle';
+
+// 💡 建议：中心球文字颜色设为白色，增强对比度
+ctx.fillStyle = node.level === 1 ? '#ffffff' : '#001f3f';
+  
+  // 第一层核心球建议用白色字，对比更强烈
+  ctx.fillStyle = node.level === 1 ? '#ffffff' : '#001f3f';
+
+  // 3. 💡 智能换行逻辑 (偏移量改用动态的 fontSize)
   if (label.length > 6) { 
-    // 如果超过6个字，拆成两行
     const mid = Math.ceil(label.length / 2);
     const line1 = label.substring(0, mid);
     const line2 = label.substring(mid);
     
+    // 这里的 0.6 是根据字号动态计算行高，保证在球体正中心
     ctx.fillText(line1, node.x, node.y - fontSize * 0.6);
     ctx.fillText(line2, node.x, node.y + fontSize * 0.6);
   } else {
-    // 短文本单行显示
     ctx.fillText(label, node.x, node.y);
   }
 })
@@ -224,6 +280,7 @@ graphInstance = ForceGraph()(graphContainer.value)
         name: labelText,
         color: finalColor,
         val: dynamicRadius, 
+        level: level,
         fx: null,
         fy: null
           });
@@ -358,24 +415,8 @@ const toggleFavorite = () => {
 
 <style scoped lang="scss">
 
-/* --- 全局背景：呼应首页的浅蓝色调 --- */
-.job-detail {
-  background: linear-gradient(135deg, #f5faff 0%, #ffffff 100%);
-  min-height: 100vh;
-}
 
-/* --- 1. 毛玻璃导航栏 --- */
-.header {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(20px);
-  padding: 12px 60px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-  
-  h1 { font-size: 18px; font-weight: 700; color: #334455; }
-}
+
 
 /* --- 2. 布局：双栏呼吸感 --- */
 .main-content {
@@ -487,67 +528,224 @@ const toggleFavorite = () => {
     &:hover { transform: translateY(-2px); box-shadow: 0 12px 25px rgba(64, 158, 255, 0.4); }
   }
 }
-/* --- 1. 全屏布局基础 --- */
+
+/* --- 统一后的根容器样式 --- */
 .job-detail {
-  width: 100%;
   min-height: 100vh;
-  background: #f5f7fa;
   display: flex;
   flex-direction: column;
-  box-sizing: border-box;
+  /* 💡 你的三色渐变背景 */
+  background: linear-gradient(
+    135deg, 
+    #faf9ed 0%,    /* 浅蓝灰 */
+    #e8eef9 50%,   /* 淡紫色 */
+    #f3e5f55a 100%   /* 浅藕荷色 */
+  ) !important;
+  background-attachment: fixed; /* 背景固定，滑动时更有质感 */
 }
 
 /* 顶部导航栏：增加阴影和内边距 */
+/* --- 顶部导航栏彻底重构 --- */
 .header {
-  background: #ffffff;
-  padding: 15px 30px;
+  /* 1. 移除背景和边框，实现清爽感 */
+  background: transparent !important; 
+  border: none !important;
+  
+  /* 2. 布局调整 */
+  height: 90px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  flex-shrink: 0;
+  padding: 0 40px;
+  position: relative;
+  z-index: 100;
+}
 
-  .header-left {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    h1 {
-      margin: 0;
-      font-size: 20px;
-      color: #303133;
-      font-weight: 600;
-    }
-  }
+/* 3. 岗位详情文字美化：字号加大 + 渐变质感 */
+.header h1 {
+  font-size: 32px; /* 💡 字号显著加大 */
+  font-weight: 700;
+  letter-spacing: 3px;
+  margin: 0;
+  /* 科技感渐变色 */
+  background: linear-gradient(135deg, #d49bb3 0%, #366da4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
 
-  .actions {
-    display: flex;
-    gap: 15px;
-    
-    .filled {
-      color: #F56C6C;
-    }
+/* 4. 返回按钮美化 */
+.back-btn {
+  font-size: 17px;
+  color: #606266 !important;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    color: #11365c !important;
+    transform: translateX(-5px); /* 悬停微动，更有灵动感 */
   }
 }
 
+/* 5. 五角星收藏图标美化 */
+/* --- 五角星收藏图标美化 --- */
+.actions .el-button {
+  font-size: 28px;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  padding: 0;
+  border: none;
+
+  &:hover {
+    transform: scale(1.2) rotate(10deg);
+  }
+
+  /* 💡 使用 :deep 穿透组件，确保能抓到图标内部的颜色 */
+  :deep(.el-icon) {
+    color: #909399; /* 默认灰色 */
+    transition: all 0.3s ease;
+
+    /* 当 class 包含 filled 时（注意这里去掉了前面的空格，表示同级匹配） */
+    &.filled {
+      color: #FFD700 !important; 
+      filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6)) !important;
+    }
+    
+    /* 针对 SVG 内部路径强制染色 */
+    &.filled svg {
+      fill: #FFD700 !important;
+    }
+  }
+}
 /* --- 2. 主体内容区：取消宽度限制 --- */
 .main-content {
   flex: 1;
-  padding: 24px 30px;
+  padding: 0px 30px;
   display: flex;
   flex-direction: column;
   gap: 20px;
   /* 确保在大屏幕下内容也不会缩在一起 */
   width: 100%; 
   box-sizing: border-box;
+  margin-top: 3px;
 }
 
+/* --- 统一卡片基础美化 --- */
 .card {
-  background: #ffffff;
-  border-radius: 12px;
-  border: none;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
-  overflow: hidden;
-  transition: transform 0.3s ease;
+  /* 1. 变“重”为“轻”：使用半透明背景 */
+  background: rgba(255, 255, 255, 0.65) !important;
+  /* 2. 毛玻璃效果：让底部的三色渐变透上来 */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  
+  /* 3. 边框微调：使用极细的浅色边框，模拟玻璃边缘 */
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  border-radius: 20px !important; /* 💡 更大的圆角看起来更现代 */
+  
+  /* 4. 阴影优化：使用柔和的浅蓝色扩散阴影 */
+  box-shadow: 0 10px 30px rgba(100, 120, 150, 0.08) !important;
+  
+  margin-bottom: 0; /* 间距由 main-content 的 gap 控制 */
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  overflow: visible; /* 允许内部装饰溢出 */
+}
+
+/* 5. 鼠标悬停动效：产生轻微浮起感 */
+.card:hover {
+  transform: translateY(-5px);
+  background: rgba(255, 255, 255, 0.8) !important;
+  box-shadow: 0 15px 40px rgba(64, 158, 255, 0.12) !important;
+}
+
+/* --- 6. 强化卡片头部标题 --- */
+:deep(.el-card__header) {
+  border-bottom: 1px solid rgba(64, 158, 255, 0.1) !important;
+  padding: 18px 25px !important;
+  
+  span {
+    font-size: 18px;
+    font-weight: 600;
+    color: #2c3e50;
+    position: relative;
+    padding-left: 12px;
+    
+    /* 标题左侧的彩色装饰短线 */
+    &::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 4px;
+      height: 16px;
+      background: linear-gradient(to bottom, #409EFF, #7fb8ee);
+      border-radius: 10px;
+    }
+  }
+}
+
+/* --- 7. 岗位介绍内容的间距微调 --- */
+:deep(.el-card__body) {
+  padding: 25px !important;
+}
+
+.job-header h2 {
+  font-size: 26px;
+  color: #1a1a1a;
+  margin-bottom: 12px;
+}
+
+.job-meta {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  color: #606266;
+  
+  .salary {
+    font-size: 20px;
+    color: #fc8484; /* 醒目的薪资颜色 */
+    font-weight: bold;
+  }
+}
+
+/* 1. 确保卡片是相对定位的基准 */
+.intro-card {
+  position: relative;
+  overflow: hidden; /* 裁剪掉超出圆角的部分 */
+}
+
+/* 2. 调整文字层级，确保不被图片完全盖住 */
+.description {
+  position: relative;
+  z-index: 2;
+  padding-right: 60px; /* 给右侧留出呼吸空间 */
+}
+
+/* 3. 图片的绝对定位样式 */
+.card-decoration {
+  position: absolute;
+  top: -20px;    /* 稍微往上偏一点，更有设计感 */
+  right: 30px;  /* 稍微往右偏一点 */
+  width: 300px;  /* 根据你的图片大小调整 */
+  height: auto;
+  
+  /* 💡 核心：透明度与混合模式 */
+  opacity: 0.15;      /* 保持低透明度，作为背景点缀 */
+  pointer-events: none; /* 鼠标可以穿透图片，不影响你选中文字 */
+  z-index: 1;
+  
+  /* 💡 高级技巧：让图片左侧淡出，不干扰文字阅读 */
+  -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 100%);
+  mask-image: linear-gradient(to left, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 100%);
+  
+  /* 增加一个丝滑的入场动画 */
+  transition: all 0.5s ease;
+}
+
+/* 4. 交互：鼠标移入卡片时，图片稍微变亮或放大 */
+.intro-card:hover .card-decoration {
+  opacity: 0.25;
+  transform: scale(1.05) rotate(-3deg);
 }
 
 /* --- 3. UI 细节增强：标题栏渐变与薪资 --- */
@@ -617,7 +815,7 @@ const toggleFavorite = () => {
       transform: translateY(-50%);
       width: 4px;
       height: 18px;
-      background: #409EFF; /* 蓝色装饰条 */
+      background: #8dc2f7; /* 蓝色装饰条 */
       border-radius: 2px;
     }
   }
@@ -680,10 +878,50 @@ const toggleFavorite = () => {
   }
 }
 
+/* --- 岗位换岗晋升图专属样式 --- */
+.promotion-card {
+  margin-top: 10px; /* 与上方卡片保持间距 */
+  position: relative;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-tag {
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.promotion-container {
+  min-height: 400px; /* 为图表预留足够的高度 */
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.2); /* 内部区域稍微做点区分 */
+  border-radius: 12px;
+}
+
+.graph-placeholder {
+  width: 100%;
+  height: 400px;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .promotion-container {
+    min-height: 300px;
+  }
+}
+
+
 .graph-wrapper {
   position: relative;
   width: 100%;
-  height: 500px; /* 设定固定高度 */
+  height: 600px; /* 设定固定高度 */
   background: #fdfdfd;
   border-radius: 8px;
   border: 1px solid #f0f2f5;
