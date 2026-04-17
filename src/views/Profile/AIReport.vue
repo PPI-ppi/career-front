@@ -152,26 +152,6 @@
               </el-row>
             </section>
 
-            <section class="path-section">
-              <div class="card glass-card path-card accent-blue">
-                <h3 class="card-title">
-                  <el-icon><Guide /></el-icon>
-                  专属职业发展里程碑路径
-                </h3>
-                <div v-if="careerPathLoaded" ref="pathRef" class="path-container">
-                  <div class="path-placeholder glass-inner">
-                    <el-icon class="placeholder-icon"><Finished /></el-icon>
-                    <p class="status-text">专属里程碑路径已生成</p>
-                    <span class="status-hint">（交互式时间轴组件将在下一版本上线，敬请期待）</span>
-                  </div>
-                </div>
-                <div v-else class="path-loading">
-                  <el-skeleton-item variant="rect" class="skeleton-rect" />
-                  <p class="loading-hint">正在通过大模型生成专属发展路径...</p>
-                </div>
-              </div>
-            </section>
-
           </div>
  </el-tab-pane> </el-tabs>
     </div>

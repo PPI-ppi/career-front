@@ -1,5 +1,26 @@
 <template>
   <div class="home">
+    <div v-if="showProfileGuide" class="force-guide-overlay">
+      <div class="guide-glass-card">
+        <div class="icon-section">
+          <el-icon :size="60" color="#667eea"><UserFilled /></el-icon>
+        </div>
+        <h2 class="guide-title">完善职业画像</h2>
+        <p class="guide-desc">
+          欢迎来到 <strong>职途无限</strong>。<br/>
+          为了通过 AI 为您精准匹配晋升路径，请先前往个人中心填写您的背景信息。
+        </p>
+        <el-button 
+          type="primary" 
+          size="large" 
+          class="guide-enter-btn"
+          @click="goToPersonalCenter"
+        >
+          立即前往完善
+        </el-button>
+      </div>
+    </div>
+    <div :class="{ 'blur-bg': showProfileGuide }">
     <!-- 1. 顶部区域 -->
     <header class="home-header">
       <div class="header-content">
@@ -361,6 +382,7 @@
         <el-link type="info">服务条款</el-link>
       </p>
     </footer>
+    </div>
   </div>
 </template>
 
@@ -383,7 +405,19 @@ import * as echarts from 'echarts'
 import { hotJobs, userData } from '@/mock/data.js'
 import JobCard from '@/components/JobCard.vue'
 import gsap from 'gsap'
+import { UserFilled } from '@element-plus/icons-vue'; // 确保引入图标
 
+const showProfileGuide = ref(false); // 控制浮层显示
+
+
+
+
+// 跳转到个人中心的函数
+const goToPersonalCenter = () => {
+  // 注意：请确认你的路由表中个人中心路径是 '/index' 还是 '/personal'
+  // 根据你提供的文件名为 Index.vue，通常对应 '/index'
+  router.push('/profile'); 
+};
 // 计算胜率：个人分 / 岗位要求分 (假设 category 里有要求分)
 const calculateWinRate = (category) => {
   const baseRate = 70; // 基础分
@@ -718,6 +752,8 @@ const startTyping = () => {
   }, 100);
 };
 
+
+
 // 搜索相关
 const searchKeyword = ref('')
 const hotSearchTags = ref(['Java 工程师', '前端开发', '算法专家', '产品经理', '数据分析师', 'AI 工程师'])
@@ -840,6 +876,21 @@ onMounted(() => {
   window.addEventListener('resize', handleResize)
 })
 
+onMounted(() => {
+  // 检查 sessionStorage 是否有标记
+  const isCompleted = sessionStorage.getItem('is_profile_completed');
+  
+  if (!isCompleted) {
+    // 如果没填过，显示浮层
+    showProfileGuide.value = true;
+  } else {
+    showProfileGuide.value = false;
+    // 如果填过了，执行原有的打字机等动画
+    startTyping();
+  }
+
+});
+
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
 })
@@ -854,6 +905,55 @@ const handleResize = () => {
   min-height: 100vh;
   background: #c4d1f617;
   
+}
+
+/* 强制引导浮层样式 */
+.force-guide-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px); /* 极高模糊，符合高级简约感 */
+  z-index: 10000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.guide-glass-card {
+  width: 380px;
+  padding: 50px 40px;
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.guide-title {
+  font-size: 24px;
+  color: #2d3436;
+  margin: 20px 0 10px;
+}
+
+.guide-desc {
+  color: #636e72;
+  margin-bottom: 30px;
+  line-height: 1.6;
+}
+
+.guide-enter-btn {
+  width: 100%;
+  height: 45px;
+  border-radius: 10px;
+  background: #000; /* 黑色系，简约高级 */
+  border: none;
+}
+
+.blur-bg {
+  filter: blur(10px);
+  pointer-events: none; /* 锁定背景不可点击 */
 }
 
 // ========== 1. 顶部区域 (修正了布局与层级) ==========
@@ -1997,8 +2097,7 @@ const handleResize = () => {
   /* 精致边框：模拟玻璃边缘亮光 */
   border: 1px solid rgba(255, 255, 255, 0.5) !important;
   border-radius: 20px !important;
-  
-  /* 弥散投影：极其轻微，防止浅色页面显得脏 */
+    /* 弥散投影：极其轻微，防止浅色页面显得脏 */
   box-shadow: 0 8px 32px rgba(31, 38, 135, 0.04) !important;
   
   /* 动画过渡 */

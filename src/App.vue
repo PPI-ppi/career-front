@@ -3,8 +3,14 @@
     <!-- 全局导航栏 -->
     <nav class="navbar">
       <div class="navbar-left">
-        <img src="@/assets/logo.png" alt="Logo" class="nav-logo-img" />
-      </div>
+        <div class="logo-wrapper" @click="router.push('/')">
+          <img src="@/assets/logo.png" alt="Logo" class="nav-logo-img" />
+          <div class="brand-text">
+            <span class="brand-ch">职途无限</span>
+            <span class="brand-en">INFINITE PATH</span>
+          </div>
+        </div>
+</div>
       
       <div class="navbar-center">
         <router-link to="/" class="nav-link">首页</router-link>
@@ -103,13 +109,42 @@ background: linear-gradient(
   z-index: 1000;
 
   .navbar-left {
-    .logo {
-      display: flex;
+    display: flex;
     align-items: center;
-    /* 适当增加左侧间距，让 logo 呼吸感更强 */
-    padding-left: 10px;
+
+    .logo-wrapper {
+      display: flex;      /* 关键：让图片和文字横向排列 */
+      align-items: center; /* 关键：让图片和文字垂直居中 */
+      gap: 15px;          /* 图片和文字的间距 */
+
+      .nav-logo-img {
+        height: 40px;
+        width: auto;
+        object-fit: contain;
+      }
+
+      .brand-text {
+        display: flex;
+        flex-direction: column; /* 文字保持上下排列 */
+        line-height: 1.1;
+
+        .brand-ch {
+          font-size: 18px;
+          font-weight: 600;
+          color: #082645;
+          letter-spacing: 1px;
+        }
+
+        .brand-en {
+          font-size: 10px;
+          color: #909399;
+          letter-spacing: 1.5px;
+          transform: scale(0.85);
+          transform-origin: left;
+      }
     }
   }
+}
 
 .nav-logo-img {
   height: 40px;

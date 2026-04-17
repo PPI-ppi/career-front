@@ -96,10 +96,24 @@
                       @keydown.enter.prevent="handleSend"
                     />
                     <div class="input-footer">
-                      <el-upload action="#" :auto-upload="false" :show-file-list="false">
-                        <el-button link icon="Upload">上传附件</el-button>
+                      <el-upload 
+                        action="#" 
+                        :auto-upload="false" 
+                        :show-file-list="false"
+                        :on-change="handleFileChange"
+                        accept=".pdf,.doc,.docx,.txt"
+                      >
+                        <el-button link icon="Upload">
+                          {{ attachedFile ? '更换附件' : '上传附件' }}
+                        </el-button>
                       </el-upload>
                       
+                      <div v-if="attachedFile" class="file-tag">
+                        <el-tag closable size="small" @close="removeFile">
+                          {{ attachedFile.name }}
+                        </el-tag>
+                      </div>
+
                       <el-button 
                         type="primary" 
                         circle 
@@ -177,6 +191,26 @@ import GrowthTracker from './GrowthTracker.vue'
 import PolishAndExport from './PolishAndExport.vue'
 import FavoriteJobs from './FavoriteJobs.vue'
 
+const attachedFile = ref(null) // 存储文件对象
+
+// 🌟 处理文件选择逻辑
+const handleFileChange = (file) => {
+  // 校验文件大小 (例如 5MB 限制)
+  const isLt5M = file.size / 1024 / 1024 < 5
+  if (!isLt5M) {
+    ElMessage.error('上传附件大小不能超过 5MB!')
+    return
+  }
+  
+  attachedFile.value = file.raw // 存储原始 File 对象
+  ElMessage.success(`已添加附件: ${file.name}`)
+}
+
+// 🌟 移除附件逻辑
+const removeFile = () => {
+  attachedFile.value = null
+}
+
 const activeTab = ref('info')
 const isInfoFilled = ref(false)
 const loading = ref(false)
@@ -202,23 +236,60 @@ const handleMenuSelect = (index) => {
   activeTab.value = index
 }
 
+// 🌟 修改发送逻辑
 const handleSend = async () => {
-  if (!inputValue.value.trim()) return
-  chatMessages.value.push({ id: Date.now(), role: 'user', content: inputValue.value })
-  userInfo.value.rawResumeText += inputValue.value
-  inputValue.value = ''
-  loading.value = true
-  await scrollToBottom()
+  // 1. 拦截逻辑：文字和附件都为空时才拦截
+  if (!inputValue.value.trim() && !attachedFile.value) {
+    ElMessage.warning('请输入内容或上传简历附件')
+    return
+  }
+
+  // 2. 构造用户消息内容
+  // 如果有文件，展示 [附件:文件名]；如果有文字，也一并拼接到内容里
+  let displayContent = inputValue.value;
+  if (attachedFile.value) {
+    displayContent += displayContent ? `\n[附件: ${attachedFile.value.name}]` : `[附件: ${attachedFile.value.name}]`;
+  }
+
+  // 3. 🌟 关键：推送到聊天记录数组 (注意：这里使用你原本代码中的 chatMessages)
+  chatMessages.value.push({
+    id: Date.now(),
+    role: 'user',
+    content: displayContent,
+    time: new Date().toLocaleTimeString()
+  });
+
+  // 4. 更新简历文本（模拟你的业务逻辑）
+  if (inputValue.value) {
+    userInfo.value.rawResumeText += inputValue.value;
+  }
+
+  // 5. 清空输入状态
+  const savedInputValue = inputValue.value; // 如果后续 API 需要用到，可以先存一下
+  inputValue.value = '';
+  attachedFile.value = null; // 清空附件，让 UI 上的标签消失
+
+  // 6. UI 反馈与滚动
+  loading.value = true;
+  await scrollToBottom();
+
+  // 7. 模拟 AI 回复
   setTimeout(async () => {
-    chatMessages.value.push({ id: Date.now(), role: 'assistant', content: '画像已实时更新。' })
-    loading.value = false
-    await scrollToBottom()
-  }, 1000)
+    chatMessages.value.push({
+      id: Date.now(),
+      role: 'assistant',
+      content: '收到！简历内容/附件已实时分析，画像已更新。',
+      time: new Date().toLocaleTimeString()
+    });
+    loading.value = false;
+    await scrollToBottom();
+  }, 1000);
 }
 
 const saveAndContinue = () => {
   isInfoFilled.value = true
   ElMessage.success('简历保存成功！')
+  sessionStorage.setItem('is_profile_completed', 'true');
 }
 
 const handleFileUpload = () => {
@@ -234,6 +305,17 @@ const scrollToBottom = async () => {
   await nextTick()
   if (messageListRef.value) messageListRef.value.scrollTop = messageListRef.value.scrollHeight
 }
+
+const handleDeepAnalysis = () => {
+  // 1. 设置临时标记，告知首页信息已填
+  sessionStorage.setItem('is_profile_completed', 'true');
+  
+  // 2. 原有的跳转逻辑
+  router.push('/').then(() => {
+    // 强制刷新一下首页的状态（可选，如果 Home 逻辑没跑）
+    window.location.reload(); 
+  });
+};
 </script>
 
 <style scoped lang="scss">
@@ -709,6 +791,7 @@ const scrollToBottom = async () => {
   align-items: center;
   margin-top: 12px;
   padding: 0 4px;
+  gap: 12px; // 按钮和标签之间的间距
 
   /* 上传按钮样式优化 */
   :deep(.el-button--text) {
@@ -716,6 +799,17 @@ const scrollToBottom = async () => {
     &:hover { color: #764ba2; }
   }
 
+  .file-tag {
+    flex: 1; // 让文件名占据剩余空间
+    display: flex;
+    align-items: center;
+    
+    :deep(.el-tag) {
+      background: rgba(102, 126, 234, 0.1);
+      border: 1px solid rgba(102, 126, 234, 0.2);
+      color: #4f46e5;
+    }
+  }
   /* 发送按钮美化 */
   .send-btn {
     width: 36px;

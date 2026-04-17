@@ -75,16 +75,7 @@
         </template>
 
         <div class="promotion-container">
-          <div v-if="loading" class="skeleton">
-            <el-skeleton :rows="8" animated />
-          </div>
-          <div v-else id="promotionGraph" class="graph-placeholder">
-            <el-empty description="晋升路径图加载中..." :image-size="100">
-              <template #description>
-                <p style="color: #909399;">正在生成职业发展路径，请稍候...</p>
-              </template>
-            </el-empty>
-          </div>
+          <div id="promotion-graph-container" style="width: 100%; height: 400px;"></div>
         </div>
       </el-card>
 
@@ -93,7 +84,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted,nextTick } from 'vue'
+import { ref, computed, onMounted,nextTick, onBeforeUnmount, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router'
 import { ArrowLeft, Star, StarFilled } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
@@ -101,7 +92,8 @@ import rawData from '@/assets/data.json'
 import ForceGraph from 'force-graph'
 import neo4j from 'neo4j-driver'
 import * as d3 from 'd3';
-import { mockGraphData } from '@/assets/mockGraph.js'
+import * as G6 from '@antv/g6';
+import promotionData from '@/mock/promotionData.json'; // 确保你已创建此文件
 
 // --- 1. 引用和状态 ---
 const graphContainer = ref(null)
@@ -320,7 +312,19 @@ ctx.fillStyle = node.level === 1 ? '#ffffff' : '#001f3f';
 onMounted(async () => {
   await nextTick()
   initGraph()
+  initPromotionGraph(); // 新增的 Mock 数据初始化
 })
+
+// 加载状态
+const loading = ref(true)
+
+// 当前职位数据
+const job = ref(null)
+
+// 监听岗位切换
+watch(() => job.value, () => {
+  nextTick(() => initPromotionGraph());
+}, { deep: true });
 
 const resetView = () => graphInstance.zoomToFit(400)
 
@@ -355,11 +359,6 @@ onMounted(async () => {
 const router = useRouter()
 const route = useRoute()
 
-// 加载状态
-const loading = ref(true)
-
-// 当前职位数据
-const job = ref(null)
 
 // 是否已收藏
 const isFavorited = ref(false)
@@ -389,6 +388,8 @@ const goBack = () => {
   router.back()
 }
 
+
+
 // 2. 修改点击收藏的逻辑
 const toggleFavorite = () => {
   if (job.value) {
@@ -411,6 +412,108 @@ const toggleFavorite = () => {
     localStorage.setItem('user_favorites', JSON.stringify(favorites.value))
   }
 }
+
+// 1. 在脚本最顶部增加导入 (约第 34 行 import 区域)
+
+
+// 2. 在 toggleFavorite 函数下方追加以下绘图逻辑
+const graph = ref(null);
+const currentJobTitle = ref('软件测试工程师（专项方向）'); // 这里可以根据 job.value.title 动态匹配
+
+
+
+const promotionGraphInstance = ref(null);
+
+const initPromotionGraph = () => {
+  const container = document.getElementById('promotion-graph-container');
+  if (!container || !job.value) return;
+
+  // 1. 销毁旧实例，防止重复渲染
+  if (promotionGraphInstance.value) {
+    promotionGraphInstance.value.destroy();
+    promotionGraphInstance.value = null;
+  }
+
+  // 2. 统一获取岗位名称
+  const currentTitle = (job.value.job_title || job.value.title || "").trim();
+  
+  // 3. 过滤数据
+  const filtered = promotionData.filter(item => 
+    item.tech_type === currentTitle
+  );
+
+  // 调试：请在浏览器控制台查看这里是否有数据输出
+  console.log('当前页面岗位:', currentTitle);
+  console.log('匹配到的晋升路径数据:', filtered);
+
+  if (filtered.length === 0) {
+    console.warn(`未匹配到 "${currentTitle}" 的晋升数据，请检查 JSON 里的 tech_type`);
+    return;
+  }
+
+  // 4. 处理节点坐标 (将 fx, fy 映射到 G6 的 x, y)
+  const nodes = filtered.map(item => ({
+    id: item.title,
+    label: `${item.level}\n${item.title}`,
+    // 使用相对坐标，配合下面的 fitView: true 自动居中
+    x: item.fx, 
+    y: item.fy, 
+    type: 'modelRect',
+    style: {
+      fill: item.type === 'management' ? '#FDF6EC' : '#ffffff',
+      stroke: item.type === 'management' ? '#E6A23C' : '#409EFF',
+      lineWidth: 2,
+      radius: 4,
+    },
+    labelCfg: {
+      style: {
+        fontSize: 10,
+        fill: '#333'
+      }
+    }
+  }));
+
+  // 5. 生成连线 (根据 fy 排序连线)
+  const edges = [];
+  const sortedNodes = [...nodes].sort((a, b) => a.y - b.y);
+  for (let i = 0; i < sortedNodes.length - 1; i++) {
+    edges.push({
+      source: sortedNodes[i].id,
+      target: sortedNodes[i+1].id,
+      style: { stroke: '#A2B1C3', endArrow: true }
+    });
+  }
+
+  // 6. 初始化并渲染图谱
+  promotionGraphInstance.value = new G6.Graph({
+    container: 'promotion-graph-container',
+    width: container.scrollWidth,
+    height: 450,
+    fitView: true, // 核心：自动缩放以适配 fy 很大的数值
+    fitViewPadding: 30,
+    modes: {
+      default: ['drag-canvas', 'zoom-canvas', 'drag-node'],
+    },
+    defaultNode: {
+      size: [120, 40],
+    }
+  });
+
+  promotionGraphInstance.value.data({ nodes, edges });
+  promotionGraphInstance.value.render();
+};
+
+
+onBeforeUnmount(() => {
+  // 清理 Neo4j 实例
+  if (graphInstance && typeof graphInstance._destructor === 'function') {
+    graphInstance._destructor();
+  }
+  // 清理 G6 实例
+  if (promotionGraphInstance.value) {
+    promotionGraphInstance.value.destroy();
+  }
+});
 </script>
 
 <style scoped lang="scss">
@@ -896,13 +999,17 @@ const toggleFavorite = () => {
 }
 
 .promotion-container {
-  min-height: 400px; /* 为图表预留足够的高度 */
+  min-height: 400px;
   width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: rgba(255, 255, 255, 0.2); /* 内部区域稍微做点区分 */
+  background: #fff;
   border-radius: 12px;
+  overflow: hidden;
+  position: relative; /* 必须是 relative 保证 Canvas 定位正确 */
+}
+
+/* 确保 G6 生成的 canvas 样式正常 */
+#promotion-graph-container canvas {
+  display: block;
 }
 
 .graph-placeholder {

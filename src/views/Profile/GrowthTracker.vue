@@ -62,22 +62,42 @@
     </el-row>
 
     <el-card class="glass-card todo-section">
-      <template #header>
-        <div class="card-header">
-          <span><el-icon><Checked /></el-icon> 代理人分配任务</span>
-          <span class="todo-subtitle">完成任务可提升 {{ targetPosition }} 匹配度</span>
-        </div>
-      </template>
-      <div class="todo-grid">
-        <div v-for="todo in todoList" :key="todo.id" class="todo-item-card" :class="{ 'is-completed': todo.completed }">
-          <el-checkbox v-model="todo.completed" size="large" />
-          <div class="todo-info">
+  <template #header>
+    <div class="card-header">
+      <span><el-icon><Checked /></el-icon> 代理人分配任务</span>
+      <span class="todo-subtitle">完成任务可提升 {{ targetPosition }} 匹配度</span>
+    </div>
+  </template>
+
+  <div class="todo-vertical-list">
+    <div 
+      v-for="todo in todoList" 
+      :key="todo.id" 
+      class="todo-item-refined" 
+      :class="{ 'is-completed': todo.completed }"
+    >
+      <div class="todo-main-row">
+        <el-checkbox v-model="todo.completed" size="large" />
+        <div class="todo-content">
+          <div class="todo-title-row">
             <span class="todo-text">{{ todo.text }}</span>
-            <el-tag v-if="todo.isAI" size="small" type="warning" effect="dark" class="ai-tag">AI 建议</el-tag>
+            <el-tag v-if="todo.isAI" size="small" type="warning" effect="plain" class="ai-tag">AI 建议</el-tag>
+          </div>
+          
+          <div class="todo-details">
+            <p class="todo-desc">
+              {{ todo.desc || '点击查看该任务的详细执行建议与学习资源...' }}
+            </p>
+            <div class="todo-meta">
+              <span class="meta-tag"><el-icon><Timer /></el-icon> 预计 {{ todo.time || '30' }}min</span>
+              <span class="meta-tag"><el-icon><StarFilled /></el-icon> 难度：{{ todo.difficulty || '中等' }}</span>
+            </div>
           </div>
         </div>
       </div>
-    </el-card>
+    </div>
+  </div>
+</el-card>
 
     <div 
   class="floating-agent-wrapper" 
@@ -202,7 +222,7 @@ const radarChartRef = ref(null)
 let radarInstance = null
 
 const todoList = ref([
-  { id: 1, text: '重构 PersonalInfo 模块代码', completed: true, isAI: false },
+  { id: 1, text: '重构 PersonalInfo 模块代码', completed: false, isAI: true },
   { id: 2, text: '集成 ECharts 响应式适配逻辑', completed: false, isAI: true },
   { id: 3, text: '撰写 AI 职业分析报告总结', completed: false, isAI: true }
 ])
@@ -670,5 +690,99 @@ const sendCoachMessage = () => {
 .is-dragging {
   transition: none !important;
 }
+}
+
+.todo-section {
+  /* 保持卡片本身的毛玻璃质感 */
+  background: rgba(255, 255, 255, 0.4) !important;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 20px;
+
+  .todo-vertical-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px; // 任务项之间的垂直间距
+  }
+
+  .todo-item-refined {
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(226, 232, 240, 0.6);
+    border-radius: 12px;
+    padding: 16px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:hover {
+      background: #ffffff;
+      transform: translateX(4px); // 轻微右移增加灵动感
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+      border-color: rgba(102, 126, 234, 0.3);
+    }
+
+    &.is-completed {
+      opacity: 0.7;
+      background: rgba(241, 245, 249, 0.5);
+      .todo-text { text-decoration: line-through; color: #94a3b8; }
+    }
+
+    .todo-main-row {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .todo-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .todo-title-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      
+      .todo-text {
+        font-weight: 600;
+        color: #1e293b;
+        font-size: 15px;
+      }
+    }
+
+    .todo-details {
+      .todo-desc {
+        font-size: 13px;
+        color: #64748b;
+        margin: 0 0 8px 0;
+        line-height: 1.5;
+      }
+
+      .todo-meta {
+        display: flex;
+        gap: 16px;
+        
+        .meta-tag {
+          font-size: 11px;
+          color: #94a3b8;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          
+          .el-icon { color: #667eea; }
+        }
+      }
+    }
+  }
+}
+
+/* AI 标签的素雅处理 */
+.ai-tag {
+  border-radius: 4px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  background: rgba(255, 186, 116, 0.1) !important;
+  color: #f59e0b !important;
+  border: 1px solid rgba(255, 186, 116, 0.2) !important;
 }
 </style>
