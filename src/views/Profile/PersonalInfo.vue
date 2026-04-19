@@ -7,7 +7,7 @@
             <el-avatar :size="70" :src="avatarUrl" class="user-avatar" />
             <div class="user-text">
               <div class="name-row">
-                <h2>{{ userInfo.name || '默认用户' }}</h2>
+                <h2>{{ userInfo.name || '张三' }}</h2>
                 <el-tag size="small" class="status-tag">分析已就绪</el-tag>
               </div>
               <p class="sub-info">
@@ -38,7 +38,7 @@
           <div class="progress-box">
             <el-progress 
               type="circle" 
-              :percentage="85" 
+              :percentage="displayPercentage" 
               :width="140"
               :stroke-width="12"
               color="#70a1ff" 
@@ -50,7 +50,7 @@
 
       <el-col :span="8">
         <el-card class="glass-card detail-card">
-          <template #header><div class="card-header">核心竞争力模型 (九维)</div></template>
+          <template #header><div class="card-header">核心竞争力模型</div></template>
           <div v-show="!loading" ref="radarRef" class="chart-container"></div>
         </el-card>
       </el-col>
@@ -71,20 +71,34 @@
               <el-icon><MagicStick /></el-icon> AI 深度诊断报告
             </div>
           </template>
-          <div class="report-content-grid">
-            <div class="report-item">
-              <h4>核心优势</h4>
-              <p>您的技术栈在 <strong>Vue3</strong> 和 <strong>自动化工程</strong> 领域有深厚积累。雷达图显示您的“技术广度”已达到行业领先水平。</p>
-            </div>
-            <div class="report-item">
-              <h4>提分建议</h4>
-              <p>当前“项目量化”维度仍有提升空间。建议在经历中增加具体的 <strong>性能指标</strong> 或 <strong>业务增长数据</strong>，这将直接提升您的综合评分。</p>
-            </div>
-            <div class="report-item">
-              <h4>职业展望</h4>
-              <p>匹配度最高的岗位方向为：<strong>高级前端架构师</strong>。建议关注具有高并发业务背景的项目机会。</p>
-            </div>
-          </div>
+<div class="report-content-grid">
+  <div class="report-item">
+    <h4>核心优势</h4>
+    <p>&nbsp;&nbsp;&nbsp;&nbsp;您的职业基因呈现出极强的「高起点与快转化」特征。其核心竞争力在于卓越的知识内化效率与大厂级工程规范的深度融合。在学习能力与实习能力维度上，您均获得了九十五分的顶尖评价，这直接反映在您三点七的高绩点和专业前百分之十的学术排名中。</p>
+    
+    <p>&nbsp;&nbsp;&nbsp;&nbsp;更核心的表现是，您在面对高难度、高密度的知识体系时，拥有极强的底层逻辑拆解能力。这种素质在您的腾讯实习经历中得到了完美转化，您不仅完成了业务功能的开发，更深度参与了从需求初步拆解到最终测试上线的全生命周期闭环。</p>
+    
+    <p>&nbsp;&nbsp;&nbsp;&nbsp;这意味着您已初步建立起大型分布式系统的工程思维，能够无缝对接一线互联网平台的开发节奏与技术标准。这种「学术深厚」与「实战扎实」并存的双重背景，构成了您在同龄应届生中极具杀伤力的职业竞争壁垒，让您在技术理解力与执行稳健性上都具备了显著优势。</p>
+  </div>
+
+  <div class="report-item">
+    <h4>提分建议</h4>
+    <p>&nbsp;&nbsp;&nbsp;&nbsp;针对您目前证书竞争力评分与其技术深度严重脱节的现状，建议实施精准的「专业背书升级」战略。目前的证书短板可能在大型企业或外企的初筛环节成为潜在的阻碍因素，因此应当采取「降维打击」策略，将您的实战经验转化为行业公认的官方证明。</p>
+    
+    <p>&nbsp;&nbsp;&nbsp;&nbsp;鉴于您在大创项目中展现出的知识图谱与算法背景，下一步应从「功能实现者」向「架构设计者」跨越。建议优先考取与后端开发、云架构高度相关的专业级认证，如阿里云 ACP 或 AWS 解决方案架构师。这能迅速将您的技术敏感度转化为行业认可的专业权威。</p>
+    
+    <p>&nbsp;&nbsp;&nbsp;&nbsp;此外，通过获取这些高含金量的证书，可以有效消除纸面证明与实际工程实力之间的非对称性。这不仅能为后续向技术统筹或项目管理转型提供必要的准入背书，更能让您的简历在算法筛选阶段脱颖而出，彻底补齐职业竞争力拼图的最后一块缺失环节。</p>
+  </div>
+
+  <div class="report-item">
+    <h4>职业展望</h4>
+    <p>&nbsp;&nbsp;&nbsp;&nbsp;基于您在 Java 与 Python 双栖开发的深厚背景，您的职业进化路径清晰地指向了具备技术领导力潜质的「准专家级」开发者。在短期内，您的目标应精准锁定头部互联网平台的高级后端开发或算法工程化岗位，主导核心业务的高并发模块设计，建立深厚的技术信用。</p>
+    
+    <p>&nbsp;&nbsp;&nbsp;&nbsp;从长远战略视角来看，凭借您在沟通维度展现出的跨部门协作能力与团队统筹潜质，您的职业天花板将延伸至技术架构师或研发部门负责人。您对前沿技术趋势的预判力将帮助您在职场黄金期主导中大型技术团队的战略规划与选型决策，实现从技术执行向技术决策的跃迁。</p>
+    
+    <p>&nbsp;&nbsp;&nbsp;&nbsp;您不仅有望成为某一技术领域的深度专家，更能成长为平衡业务逻辑与技术演进的复合型技术领袖。在未来三到五年内，通过在工业界一线快速沉淀深厚的技术资产，您将建立起不可替代的个人品牌影响力，在瞬息万变的技术生态中始终占据核心的职业竞争位点。</p>
+  </div>
+</div>
         </el-card>
       </el-col>
     </el-row>
@@ -116,7 +130,7 @@ const avatarUrl = 'https://ui-avatars.com/api/?name=User&background=ebf5ff&color
 const mockFetchData = () => {
   return new Promise((resolve) => {
     setTimeout(() => {
-      competitivenessScore.value = 88
+      competitivenessScore.value = 87.5
       aiSuggestions.value = "根据您的经历分析，您在技术架构方面表现卓越..." 
       loading.value = false // 现在 loading 已定义，不会报错了
       resolve()
@@ -149,6 +163,15 @@ onUnmounted(() => {
   wordCloudInstance?.dispose()
 })
 
+const displayPercentage = ref(0)
+onMounted(() => {
+  // 2. 延迟 800 毫秒（或者你喜欢的时间）再显示数值
+  // 这样用户进入页面时会先看到进度条从 0 动画滑动到 85
+  setTimeout(() => {
+    displayPercentage.value = 85
+  }, 800) 
+})
+
 const initRadarChart = () => {
   if (!radarRef.value) return
   if (radarInstance) radarInstance.dispose()
@@ -158,11 +181,13 @@ const initRadarChart = () => {
   radarInstance.setOption({
     radar: {
       indicator: [
-        { name: '技术广度', max: 100 }, { name: '业务理解', max: 100 },
-        { name: '领导力', max: 100 }, { name: '项目经验', max: 100 },
-        { name: '学历', max: 100 }, { name: '稳定性', max: 100 },
-        { name: '沟通力', max: 100 }, { name: '创新力', max: 100 },
-        { name: '执行力', max: 100 }
+        { name: '专业技能', max: 100 },
+        { name: '创新能力', max: 100 },
+        { name: '学习能力', max: 100 },
+        { name: '实习能力', max: 100 },
+        { name: '抗压能力', max: 100 },
+        { name: '沟通能力', max: 100 },
+        { name: '证书', max: 100 },
       ],
       radius: '60%',
       axisName: { color: '#475569', fontWeight: 'bold', fontSize: 12 },
@@ -173,7 +198,7 @@ const initRadarChart = () => {
     series: [{
       type: 'radar',
       data: [{
-        value: [85, 72, 60, 90, 88, 75, 80, 70, 85],
+        value: [85, 90, 95, 95, 80, 85, 60],
         areaStyle: { color: 'rgba(112, 161, 255, 0.25)' },
         lineStyle: { color: '#70a1ff', width: 2.5 },
         itemStyle: { color: '#70a1ff' }
@@ -187,10 +212,11 @@ const initWordCloud = () => {
   if (wordCloudInstance) wordCloudInstance.dispose()
   
   wordCloudInstance = echarts.init(wordCloudRef.value)
-  const colorPalette = ['#70a1ff', '#8798de', '#a1c4fd', '#7bed9f'];
-  const data = [
-    { name: 'Vue3', value: 50 }, { name: 'TS', value: 40 }, 
-    { name: 'AI', value: 35 }, { name: 'Echarts', value: 30 }
+// 更加明亮、通透的浅色调
+const colorPalette = ['#7dd3fc', '#a5b4fc', '#99f6e4', '#fef08a']; const data = [
+    { name: '数据结构与算法', value: 80 }, { name: 'Java', value: 60 }, 
+    { name: '自主学习', value: 65 }, { name: '团队统筹', value: 70 },
+    { name: '软件开发', value: 55 }, { name: '跨部门协作', value: 55 }
   ]
   
   wordCloudInstance.setOption({
@@ -319,12 +345,38 @@ const initWordCloud = () => {
     .report-content-grid {
       display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; padding: 10px 0;
       .report-item {
-        h4 { 
-          margin: 0 0 10px 0; color: #1e293b; font-size: 15px; 
-          border-left: 3px solid #70a1ff; padding-left: 10px; 
-        }
-        p { margin: 0; font-size: 13px; color: #334155; line-height: 1.6; }
-      }
+  margin-bottom: 30px;
+
+  h4 {
+    font-size: 17px;
+    font-weight: 700;
+    color: #1e1b4b;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+
+    // 增加一个小装饰条
+    &::before {
+      content: "";
+      width: 4px;
+      height: 18px;
+      background: #6366f1;
+      margin-right: 10px;
+      border-radius: 2px;
+    }
+  }
+
+  p {
+    font-size: 14px;
+    line-height: 1.8;
+    color: #475569;
+    margin-bottom: 12px; // 段落之间的间距
+    text-align: justify; // 保证边缘整齐
+    
+    // 如果不想要缩进，可以删掉下面这行
+    text-indent: 0; 
+  }
+}
     }
   }
 }

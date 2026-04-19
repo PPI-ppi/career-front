@@ -113,7 +113,7 @@
       <el-card class="coaching-dialog glass-card">
         <template #header>
           <div class="dialog-header">
-            <h4>AI 职业向导</h4>
+            <h4>职能助手</h4>
             <el-button type="info" link icon="Close" @click="isCoachingOpen = false" />
           </div>
         </template>
@@ -123,7 +123,7 @@
     <div class="bot-msg-wrapper">
       <div class="bot-avatar-mini"><el-icon><MagicStick /></el-icon></div>
       <div class="bot-content">
-        <span class="bot-info">AI 职业向导</span>
+        <span class="bot-info">职能助手</span>
         <div class="bot-prompt">
           {{ aiAnalysis }}
         </div>
@@ -216,15 +216,17 @@ onUnmounted(() => {
 
 // 🌟 原有响应式数据和逻辑均保留
 const aiAnalysis = ref('正在分析中...')
-const targetPosition = ref('高级前端开发工程师')
+const targetPosition = ref('Java')
 const consecutiveDays = ref(12)
 const radarChartRef = ref(null)
 let radarInstance = null
 
 const todoList = ref([
-  { id: 1, text: '重构 PersonalInfo 模块代码', completed: false, isAI: true },
-  { id: 2, text: '集成 ECharts 响应式适配逻辑', completed: false, isAI: true },
-  { id: 3, text: '撰写 AI 职业分析报告总结', completed: false, isAI: true }
+  { id: 1, text: 'Java并发编程基础回顾与JUC包入门', completed: false, isAI: true },
+  { id: 2, text: '深入线程池原理与并发容器', completed: false, isAI: true },
+  { id: 3, text: '锁优化与AQS框架解析', completed: false, isAI: true },
+  { id: 4, text: 'JVM内存模型与垃圾回收基础', completed: false, isAI: true },
+  { id: 5, text: '垃圾回收器与内存分配策略', completed: false, isAI: true }
 ])
 
 // 🌟 初始化雷达图逻辑保留

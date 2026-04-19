@@ -12,6 +12,11 @@
                     <h3 class="card-title">
                       <el-icon><Histogram /></el-icon>总体匹配度
                     </h3>
+                    <div class="target-job-info">
+                      <span class="dot"></span>
+                      <span class="job-label">目标岗位：</span>
+                      <span class="job-name">Java</span>
+                    </div>
                     <div class="gauge-wrapper">
                       <div ref="gaugeRef" class="gauge-chart"></div>
                       <div class="gauge-score">
@@ -84,20 +89,7 @@
               </div>
             </section>
 
-            <section class="analysis-section">
-              <div class="card glass-card">
-                <h3 class="card-title">
-                  <el-icon><Document /></el-icon>
-                  匹配度深度诊断
-                </h3>
-                <div v-if="detailedAnalysis" class="analysis-content markdown-body">
-                  <div class="analysis-text" v-html="formatAnalysisText(detailedAnalysis)"></div>
-                </div>
-                <div v-else class="analysis-loading">
-                  <el-skeleton :rows="8" animated />
-                </div>
-              </div>
-            </section>
+
 
           </div>
         </el-tab-pane>
@@ -229,15 +221,45 @@ const mockFetchData = () => {
   return new Promise((resolve) => {
     setTimeout(() => {
       // === Tab 1 数据 ===
-      overallScore.value = 87
-      aiSummary.value = '根据您的简历和岗位需求深度分析，您展现出扎实的技术功底与项目经验，人岗匹配契合度极高。您在 Python 核心开发、自动化工程及数据可视化（ECharts）领域表现卓越。建议持续优化“项目量化指标”及“团队管理敏捷方法”，以冲击架构师及专家岗位。'
-      skillDetails.value = [
-        { name: 'Python 核心开发', score: 92, comment: '精通核心语法与工程落地' },
-        { name: 'Vue3 & TS 框架', score: 85, comment: '掌握主流方案，可独立构建' },
-        { name: '数据可视化 (ECharts)', score: 88, comment: '图表高级定制能力较强' },
-        { name: '跨部门沟通协作', score: 72, comment: '良好，建议提升主动汇报机制' },
-        { name: '敏捷项目管理', score: 65, comment: '需补全项目全周期管理意识' }
-      ]
+      overallScore.value = 89.62
+      aiSummary.value = '分析结论：候选人展现出了极高的职业素养与技术潜力，综合匹配度优秀。在硬实力方面，凭借 GPA 3.7 (前10%) 的卓越学术表现及 腾讯实习 的全流程工程实践经验，候选人在学习能力与实习能力上显著超出岗位预期。特别是在 Java 开发领域，候选人不仅扎实掌握了核心算法，更具备多语言开发视野。在软实力维度，候选人主导的大创项目证明了其在复杂问题解决上的创新思维，且具备应对高压场景的心理素质与跨部门协作的沟通统筹能力。优化建议：目前主要的进阶空间在于“行业垂直认证”。虽然持有通用计算机证书，但建议针对性地补全 Java 专项认证（如 Oracle 认证） 或金融科技相关的行业证书，以消除在专项资质上的微弱差距，进一步巩固竞争优势。'
+skillDetails.value = [
+  {
+    name: '专业技能',
+    score: 90,
+    comment: "与目标公司要求差距：用户精通Java/Python等开发技术，扎实掌握数据结构与算法，与Java后端开发岗位要求高度匹配，且技能深度超出基础要求。；与行业普遍要求差距：用户精通Java/Python等开发技术，扎实掌握数据结构与算法，与岗位要求的'精通Java(JDK8+), 掌握Lambda'基本匹配。但岗位要求可能更聚焦于Java生态的深度，而用户展示了多语言能力，在Java特定领域的专注度上可能存在轻微差距。"
+  },
+  {
+    name: '创新能力',
+    score: 92.5,
+    comment: "与目标公司要求差距：用户主导过大创项目并运用知识图谱等技术，参加过创新创业大赛，展现出优秀的创新思维和实践能力，与需要解决复杂问题的开发岗位高度匹配。；与行业普遍要求差距：用户主导大创项目并运用知识图谱等技术实现创新方案，参加过创新创业大赛，成果显著。这完全匹配甚至可能超出岗位对'创新能力'的常规期望，表现出优秀的实践创新和问题解决能力。"
+  },
+  {
+    name: '学习能力',
+    score: 96.5,
+    comment: "与目标公司要求差距：GPA 3.7/4.0，专业排名前10%，且具备快速掌握新技术的能力，表明其学习能力极强，能迅速适应金融科技领域的技术迭代 and 业务需求。；与行业普遍要求差距：用户GPA 3.7/4.0，专业排名前10%，且自主学习能力强，能快速掌握新技术。这完全匹配并显著超出岗位对'学习能力'的要求，证明了其卓越的学术基础和持续学习潜力。"
+  },
+  {
+    name: '实习能力',
+    score: 95,
+    comment: "与目标公司要求差距：在腾讯的实习经历，参与企业软件开发全流程，积累了扎实的工程实践经验，与岗位要求的后端开发实战能力高度契合，且平台经验有加分。；与行业普遍要求差距：用户在腾讯实习，参与企业软件开发全流程，完成功能开发、测试优化，积累了扎实的工程实践经验。这与岗位要求的'实习能力'完全匹配，且实习平台和经历质量很高，是显著优势。"
+  },
+  {
+    name: '抗压能力',
+    score: 90,
+    comment: "与目标公司要求差距：能高效应对项目攻坚、多任务并行的高压场景，这与金融科技行业快节奏、高要求的工作环境非常匹配，无明显差距。；与行业普遍要求差距：用户能高效应对项目攻坚、多任务并行等高压场景，按时高质量完成目标。这与岗位要求的'抗压能力'完全匹配，且有腾讯实习经历作为有力佐证。"
+  },
+  {
+    name: '沟通能力',
+    score: 90,
+    comment: "与目标公司要求差距：具备优秀的跨部门协作与团队统筹能力，能高效推进项目落地，完全满足开发岗位所需的团队协作和沟通要求。；与行业普遍要求差距：用户具备优秀跨部门协作与团队统筹能力，能高效推进项目落地。这与岗位要求的'沟通能力'完全匹配，展现了在复杂项目环境中所需的协作和协调技能。"
+  },
+  {
+    name: '证书',
+    score: 72.5,
+    comment: "与目标公司要求差距：持有计算机二级等专业证书，符合技术岗位的基本证书要求，但与金融科技公司可能更看重的行业特定证书（如金融、安全相关）存在一定差距。；与行业普遍要求差距：用户持有计算机二级等专业证书，但岗位明确要求'Java相关认证'（如Oracle认证等）。计算机二级证书是通用证书，与Java专项认证存在明显差距，不完全符合岗位的针对性要求。"
+  }
+]
       detailedAnalysis.value = `
         <h4 style="color: #3c4e68; font-size: 16px; margin-top: 0;">📊 核心能力综合评估</h4>
         <p>评估结论：技术广度与工程实践能力在行业中处于前 <strong>15%</strong> 水平。雷达图能力分布健康。</p>
@@ -251,25 +273,24 @@ const mockFetchData = () => {
       // === Tab 2 数据 ===
       expectedCities.value = [
         { name: '北京', value: 100 },
-        { name: '上海', value: 90 },
         { name: '深圳', value: 95 },
         { name: '杭州', value: 85 }
       ]
 
       salaryForecast.value = [
-        { year: 2026, value: 18, reason: '入门级，核心工程能力建设' },
-        { year: 2027, value: 25, reason: '微服务架构/技术选型 + 核心骨干' },
-        { year: 2028, value: 35, reason: '独立负责系统架构 + 技术栈广度拓展' },
-        { year: 2029, value: 45, reason: '晋升技术专家/团队Leader级别' },
-        { year: 2030, value: 60, reason: '架构师/技术总监，行业影响力' }
+        { year: 2026, value: 75, reason: '入门级，核心工程能力建设' },
+        { year: 2027, value: 72, reason: '微服务架构/技术选型 + 核心骨干' },
+        { year: 2028, value: 70, reason: '独立负责系统架构 + 技术栈广度拓展' },
+        { year: 2029, value: 68, reason: '晋升技术专家/团队Leader级别' },
+        { year: 2030, value: 65, reason: '架构师/技术总监，行业影响力' }
       ]
 
       jobDemandTrend.value = [
-        { year: 2026, value: 75, reason: '市场平稳，基础岗位需求稳定' },
-        { year: 2027, value: 85, reason: '行业数字化/国产化替代加速' },
-        { year: 2028, value: 95, reason: 'AI 深度应用落地 + 人才缺口扩大' },
-        { year: 2029, value: 90, reason: '市场回归理性，高端人才依然紧缺' },
-        { year: 2030, value: 88, reason: '复合型、专家型人才持续热门' }
+        { year: 2026, value: 62.2, reason: '市场平稳，基础岗位需求稳定' },
+        { year: 2027, value: 65.5, reason: '行业数字化/国产化替代加速' },
+        { year: 2028, value: 68.88, reason: 'AI 深度应用落地 + 人才缺口扩大' },
+        { year: 2029, value: 72.65, reason: '市场回归理性，高端人才依然紧缺' },
+        { year: 2030, value: 75.31, reason: '复合型、专家型人才持续热门' }
       ]
 
       mapLoaded.value = true
@@ -319,16 +340,18 @@ const formatAnalysisText = (text) => text
 const initGaugeChart = () => {
   if (!gaugeRef.value) return
   if (gaugeInstance) gaugeInstance.dispose()
+  
   gaugeInstance = echarts.init(gaugeRef.value)
-  gaugeInstance.setOption({
+  
+  const option = {
     series: [{
       type: 'gauge',
       startAngle: 180,
       endAngle: 0,
       min: 0,
       max: 100,
-      radius: '85%',
-      center: ['50%', '55%'],
+      radius: '100%', // 🌟 稍微调大半径，填满容器
+      center: ['50%', '75%'], // 🌟 调整中心点，因为是半圆，位置靠下一点更美观
       progress: {
         show: true,
         width: 18,
@@ -351,7 +374,16 @@ const initGaugeChart = () => {
       detail: { show: false },
       data: [{ value: overallScore.value }]
     }]
-  })
+  }
+
+  gaugeInstance.setOption(option)
+
+  // 🌟 核心修复：确保在下一帧进行尺寸自适应
+  setTimeout(() => {
+    if (gaugeInstance) {
+      gaugeInstance.resize()
+    }
+  }, 100)
 }
 
 watch(overallScore, (newVal) => {
@@ -728,6 +760,31 @@ onUnmounted(() => {
     
     .el-icon { font-size: 19px; }
   }
+}
+
+/* 修改 AIReport.vue 的 style 部分 */
+.gauge-wrapper {
+  position: relative;
+  height: 240px; /* 🌟 必须给外层包装一个明确的高度 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.gauge-chart {
+  width: 100%;
+  height: 100%; /* 🌟 继承包装层的高度 */
+}
+
+.gauge-score {
+  position: absolute;
+  top: 55%; /* 🌟 根据你的圆环位置微调，确保分数在圆环中心 */
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* 🌟 美化点 4: Markdown 文本通用样式 (简评、详细分析) */

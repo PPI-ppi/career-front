@@ -321,7 +321,7 @@
 
 <div class="jobs-list-container">
   <div class="section-header">
-    <h2 class="section-title">🔥 热门岗位推荐</h2>
+    <h2 class="section-title">🔥 高匹配度岗位推荐</h2>
   </div>
 
   <div class="infinite-scroll-wrapper">
@@ -371,7 +371,7 @@
 
     <!-- 底部信息 -->
     <footer class="home-footer">
-      <p>© 2026 AI Career - 智能职业镜像平台</p>
+      <p>© 2026 AI Career - 职途无限</p>
       <p class="footer-links">
         <el-link type="info">公司简介</el-link>
         <span class="divider">|</span>
@@ -447,9 +447,9 @@ const competitivenessScore = ref(75); // 来自 PersonalInfo 的同步
 
 // 这里的任务内容应与成长追踪中心 (GrowthTracker) 保持同步
 const dailyTasks = ref([
-  { id: 1, content: '完成 Vite 插件开发进阶课程', completed: false },
-  { id: 2, content: '优化 Neo4j 核心节点关联逻辑', completed: true },
-  { id: 3, content: '参与一次开源项目代码评审', completed: false }
+  { id: 1, content: 'Java并发编程基础回顾与JUC包入门', completed: false },
+  { id: 2, content: '深入线程池原理与并发容器', completed: false },
+  { id: 3, content: '锁优化与AQS框架解析', completed: false }
 ]);
 
 const skillGaps = ref([
@@ -729,7 +729,7 @@ onUnmounted(() => {
 const router = useRouter()
 
 
-const fullText = "对话未来的自己：基于数字人的职场镜像系统"
+const fullText = "职途虽远，智能无界；跨越方寸，预见无限"
 const typedText = ref("")
 const typingSpeed = 150 // 每个字的打字速度（毫秒）
 
@@ -905,6 +905,24 @@ const handleResize = () => {
   min-height: 100vh;
   background: #c4d1f617;
   
+}
+
+/* 找到 Home.vue 中的 .main-title 进行替换 */
+.main-title {
+  /* 🌟 大气点：巨大的字号配合极大的字间距 */
+  font-size: 56px; 
+  font-weight: 800;
+  letter-spacing: 6px; /* 产生一种跨越感 */
+  
+
+  
+  /* 选用更硬朗的字体 */
+  font-family: "Inter", "PingFang SC", "Source Han Sans CN", "Microsoft YaHei", sans-serif;
+  
+  /* 增加一点文字阴影的深度感（非常淡） */
+  text-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+  
+  line-height: 1.3;
 }
 
 /* 强制引导浮层样式 */

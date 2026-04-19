@@ -70,13 +70,12 @@
       <el-card class="card promotion-card">
         <template #header>
           <div class="card-header">
+            <el-icon><TrendCharts /></el-icon>
             <span>岗位换岗晋升图</span>
           </div>
         </template>
-
-        <div class="promotion-container">
-          <div id="promotion-graph-container" style="width: 100%; height: 400px;"></div>
-        </div>
+        
+        <PromotionGraph :jobTitle="job?.title" />
       </el-card>
 
     </main>
@@ -94,7 +93,7 @@ import neo4j from 'neo4j-driver'
 import * as d3 from 'd3';
 import * as G6 from '@antv/g6';
 import promotionData from '@/mock/promotionData.json'; // 确保你已创建此文件
-
+import PromotionGraph from '@/components/PromotionGraph.vue'
 // --- 1. 引用和状态 ---
 const graphContainer = ref(null)
 let graphInstance = null
@@ -982,9 +981,10 @@ onBeforeUnmount(() => {
 }
 
 /* --- 岗位换岗晋升图专属样式 --- */
-.promotion-card {
-  margin-top: 10px; /* 与上方卡片保持间距 */
-  position: relative;
+.promotion-card :deep(.el-card__body) {
+  padding: 20px;
+  height: auto;
+  overflow: visible; /* 允许内部画布正常测量高度 */
 }
 
 .card-header {

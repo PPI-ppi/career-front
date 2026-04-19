@@ -2,7 +2,7 @@
   <div class="report-export-page fade-in">
     <div class="main-layout glass-card">
       
-      <div class="report-display-container">
+      <div class="report-display-container" v-loading="pageLoading">
         <div class="paper-header">
           <input v-model="reportData.reportTitle" class="title-input" :readonly="!isEditing" />
           <div class="paper-meta">最后更新：{{ lastUpdateTime }} | 导师：AI Career Pilot</div>
@@ -108,30 +108,69 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue' // 添加 onMounted
 import { ElMessage, ElNotification } from 'element-plus'
 import { 
   MagicStick, EditPen, Download, Promotion, 
   Checked, Clock, InfoFilled, RefreshLeft, QuestionFilled 
 } from '@element-plus/icons-vue'
+import html2pdf from 'html2pdf.js';
 
 const props = defineProps({
   reportData: {
     type: Object,
     default: () => ({
       reportTitle: '2026 前端开发工程师成长规划报告',
-      initialContent: '### 职业现状分析\n当前您在 Vue3 和 ECharts 领域已有深厚积累。建议进一步提升 WebGL 等底层技术...\n\n### 发展建议\n1. 深入研究性能优化\n2. 参与开源项目'
+initialContent: `职业进阶学习计划：Java 高级架构师之路
+
+第一阶段：Java 核心深化与架构基础 (2-3个月)
+核心目标：深化 JVM 与并发编程，掌握微服务分布式核心体系。
+- 学习重点：JUC 并发工具包、JVM 垃圾回收调优、Spring Cloud Alibaba (Nacos/Sentinel)、消息中间件原理 (Kafka)。
+- 推荐资源：《深入理解Java虚拟机》、极客时间《Java并发编程实战》。
+
+第二阶段：性能调优与云原生技术栈 (2-3个月)
+核心目标：掌握大规模系统调优，熟练运用 K8s 进行容器化运维。
+- 学习重点：MySQL 索引与 SQL 调优、Redis 集群方案、Kubernetes 编排、Prometheus 可观测性监控。
+- 推荐资源：《高性能MySQL》、腾讯云/阿里云 K8s 实战练习。
+
+第三阶段：领域驱动设计 (DDD) 与架构演进 (1-2个月)
+核心目标：掌握复杂业务建模方法，建立整洁架构思维。
+- 学习重点：限界上下文划分、聚合根设计、六边形架构、代码重构与设计模式深度应用。
+- 推荐资源：《领域驱动设计：软件核心复杂性应对之道》、Martin Fowler 博客。
+
+第四阶段：综合实战与软技能提升 (持续进行)
+核心目标：提升技术方案评审、团队协作及全栈项目主导能力后。
+- 学习重点：编写高质量技术设计方案、敏捷开发管理 (Jira)、跨团队沟通、技术影响力建设 (博客/开源)。
+- 推荐资源：《代码大全》、《人月神话》。`
     })
   }
 })
 
+const pageLoading = ref(true) // 初始状态为加载中
+const reportContent = ref('') // 先设为空，加载完再赋值
+
+onMounted(() => {
+  // 模拟报告生成的加载时间，例如 1.2 秒
+  setTimeout(() => {
+    reportContent.value = props.reportData.initialContent
+    pageLoading.value = false
+    ElMessage({
+      message: '职业规划报告已生成',
+      type: 'success',
+      plain: true,
+    })
+  }, 3000)
+})
+
 // 状态管理
-const reportContent = ref(props.reportData.initialContent)
 const polishNote = ref('')
 const isEditing = ref(false)
 const polishing = ref(false)
 const downloadLoading = ref(false)
 const lastUpdateTime = ref(new Date().toLocaleTimeString())
+
+
+
 
 // 历史记录数据
 const polishHistory = ref([])
@@ -151,7 +190,73 @@ const handleAIPolish = () => {
     })
 
     // 2. 模拟覆盖
-    reportContent.value = `[AI 针对"${polishNote.value}"润色后的版本]\n` + reportContent.value;
+reportContent.value = `第1阶段: Java核心技术深化与架构基础
+⏰ 时间范围: 2个月
+
+🎯 核心目标: 精通Java并发与JVM调优，掌握Spring Cloud微服务核心组件与分布式理论。
+
+📚 学习内容:
+Java并发编程与JVM调优
+Spring Boot/Cloud微服务架构
+分布式系统理论与消息中间件
+
+📖 推荐资源:
+《Java并发编程的艺术》
+《深入理解Java虚拟机》
+极客时间相关课程
+Spring Cloud Alibaba官方文档
+简易电商微服务实践项目
+
+第2阶段: 高并发系统与云原生
+⏰ 时间范围: 2个月
+
+🎯 核心目标: 掌握数据库与缓存高级优化，熟练使用Docker/Kubernetes进行云原生部署与运维。
+
+📚 学习内容:
+MySQL优化与Redis深度应用
+Docker与Kubernetes容器化编排
+系统监控(如Prometheus/Grafana)与设计方法论
+
+📖 推荐资源:
+《高性能MySQL》
+《Redis设计与实现》
+极客时间《Kubernetes实战》
+云平台动手实验
+研究优秀开源项目架构
+
+第3阶段: 架构设计与技术视野
+⏰ 时间范围: 1个月
+
+🎯 核心目标: 理解领域驱动设计(DDD)与整洁架构，跟踪技术趋势并开始建立技术影响力。
+
+📚 学习内容:
+领域驱动设计(DDD)核心思想
+整洁/六边形架构
+代码重构与设计模式
+前沿技术趋势跟踪
+
+📖 推荐资源:
+《领域驱动设计》
+Martin Fowler博客
+参与技术社区
+用DDD思想重构一个项目
+
+第4阶段: 综合实践与职业发展
+⏰ 时间范围: 持续进行
+
+🎯 核心目标: 通过实战项目整合技术栈，提升团队协作、技术方案设计与评审等软技能。
+
+📚 学习内容:
+主导或深度参与复杂全栈项目
+技术方案设计与评审
+项目管理与跨团队沟通
+技术面试与招聘知识
+
+📖 推荐资源:
+主动承担复杂工作或发起开源项目
+《代码大全》、《人月神话》
+进行技术分享
+模拟方案评审与面试`;
     
     polishing.value = false;
     polishNote.value = '';
@@ -198,12 +303,46 @@ const toggleEdit = () => {
 }
 
 const handleDownload = () => {
-  downloadLoading.value = true
-  setTimeout(() => {
-    downloadLoading.value = false
-    ElMessage.success('PDF 导出成功')
-  }, 2000)
-}
+  // 1. 开启加载状态
+  downloadLoading.value = true;
+
+  // 2. 抓取左侧报告容器（即包含标题和正文的那块区域）
+  const element = document.querySelector('.report-display-container');
+
+  if (!element) {
+    ElMessage.error('未找到报告内容');
+    downloadLoading.value = false;
+    return;
+  }
+
+  // 3. 配置导出参数
+  const opt = {
+    margin: [10, 10], // 上下左右边距
+    filename: `${props.reportData.reportTitle || '职业规划报告'}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { 
+      scale: 2, // 提高清晰度，解决模糊问题
+      useCORS: true, 
+      letterRendering: true 
+    },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+
+  // 4. 执行导出
+  html2pdf()
+    .set(opt)
+    .from(element)
+    .save()
+    .then(() => {
+      downloadLoading.value = false;
+      ElMessage.success('PDF 导出成功');
+    })
+    .catch((err) => {
+      console.error('导出失败:', err);
+      downloadLoading.value = false;
+      ElMessage.error('导出失败，请重试');
+    });
+};
 </script>
 
 <style scoped lang="scss">

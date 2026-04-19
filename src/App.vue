@@ -129,6 +129,7 @@ background: linear-gradient(
         line-height: 1.1;
 
         .brand-ch {
+          font-family: "Inter", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
           font-size: 18px;
           font-weight: 600;
           color: #082645;
@@ -136,6 +137,7 @@ background: linear-gradient(
         }
 
         .brand-en {
+          
           font-size: 10px;
           color: #909399;
           letter-spacing: 1.5px;

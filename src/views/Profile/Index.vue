@@ -41,8 +41,7 @@
                       <span class="pulse-dot"></span>
                     </div>
                     <div class="header-text">
-                      <h3 class="chat-title">AI 职业向导</h3>
-                      <span class="ai-status-desc">DeepSeek 大模型已连接</span>
+                      <h3 class="chat-title">职能助手</h3>
                     </div>
                   </div>
                     <div class="header-right">
@@ -130,15 +129,44 @@
                 <div class="artifact-card">
                   <div class="artifact-header">
                     <h4>实时画像预览</h4>
-                    <div class="sync-badge"><el-icon><Refresh /></el-icon> 实时同步中</div>
-                  </div>
-                  <div class="preview-radar-placeholder">
-                    <div class="placeholder-text">
-                      <el-icon :size="40"><Histogram /></el-icon>
-                      <p>九维能力雷达预览区</p>
+                    <div class="completion-status">
+                      <span class="percentage">
+                        {{ currentStepIndex === 0 ? '0%' : currentStepIndex === 1 ? '14%' : currentStepIndex === 2 ? '100%' : '100%' }}
+                      </span>
+                      <span class="label">维度完善度</span>
                     </div>
                   </div>
-                  <p class="empty-preview-tip">输入更多经历以激活深度分析</p>
+                  
+                  <div class="scroll-container">
+                    <div v-if="currentStepIndex > 0" class="highlight-tags">
+                      <el-tag v-for="tag in currentHighlights" :key="tag" size="small" effect="plain" class="glow-tag">
+                        {{ tag }}
+                      </el-tag>
+                    </div>
+
+                    <div class="preview-radar-placeholder">
+                      <RadarChart :data="currentRadarData" />
+                    </div>
+
+                    <div v-if="currentStepIndex > 0" class="dimension-grid">
+                      <div 
+                        v-for="(val, key) in dimensionDetails" 
+                        :key="key" 
+                        :class="['dimension-card', val.type]"
+                      >
+                        <div class="dim-header">
+                          <span class="dim-name">{{ key }}</span>
+                          <span :class="['dim-status', val.type]">
+                            {{ val.type === 'success' ? '✓' : '○' }} {{ val.status }}
+                          </span>
+                        </div>
+                        <p class="dim-desc">{{ val.desc }}</p>
+                      </div>
+                    </div>
+                    
+                    <p class="empty-preview-tip">
+                    </p>
+                  </div>
                 </div>
               </section>
             </div>
@@ -190,7 +218,7 @@ import AIReport from './AIReport.vue'
 import GrowthTracker from './GrowthTracker.vue'
 import PolishAndExport from './PolishAndExport.vue'
 import FavoriteJobs from './FavoriteJobs.vue'
-
+import RadarChart from '../../components/RadarChart.vue'
 const attachedFile = ref(null) // 存储文件对象
 
 // 🌟 处理文件选择逻辑
@@ -219,6 +247,47 @@ const messageListRef = ref(null)
 const avatarUrl = ref('https://ui-avatars.com/api/?name=User&size=120&background=409EFF&color=fff')
 
 const userInfo = ref({ name: '', email: '', rawResumeText: '', school: '' })
+
+// --- 新增：模拟 AI 剧本配置 ---
+const scriptSteps = [
+  {
+    answer: "你提到参加过创新创业大赛，可以具体聊聊你的项目是什么，以及取得了什么样的成绩吗？ 关于在腾讯的实习经历，你当时是在哪个岗位实习呢？主要负责哪些工作，有没有什么让你印象深刻的成果呀？ 除了Python编程，你有没有考取过什么相关的证书呢？ 你觉得自己的学习能力怎么样呀？有没有什么快速掌握新知识的例子可以分享呢？ 在团队合作或者项目中，你通常是如何与队友沟通的呢？ 面对压力比较大的任务或项目时，你一般会怎么应对呢？",
+    radarData: [40, 30, 0, 50, 0, 0, 0], // 对应 9 维能力的数值
+  },
+  {
+    answer: "🎉 信息已完善！恭喜您完成了所有7个维度的信息采集",
+    radarData: [85, 90, 95, 95, 80, 85, 60],
+  },
+  {
+    answer: "分析已全部完成！基于你目前的表现，我为你匹配了‘前端开发’、‘UI 交互’等目标岗位。你可以点击下方的‘保存并开始 AI 深度分析’，查看完整的职业路线图和优化策略。",
+    radarData: [90, 85, 90, 80, 85, 90, 85],
+  }
+];
+
+
+
+// --- 新增：状态追踪变量 ---
+const currentStepIndex = ref(0); // 记录当前对话到第几轮了
+const currentRadarData = ref([0, 0, 0, 0, 0, 0, 0]); // 传给右侧看板的数据
+
+// 在 script 标签内添加
+const currentHighlights = computed(() => {
+  const highlights = [
+    [], // 初始状态
+    ['熟悉 Python'],
+    ['计算机二级', '掌握数据结构与算法', '精通Java/Python等开发技术']
+  ];
+  return highlights[currentStepIndex.value] || highlights[2];
+});
+
+const currentSuggestion = computed(() => {
+  const suggestions = [
+    '',
+    '建议强化实战项目中的困难解决方案描述。',
+    '画像已成熟，建议考取计算机二级证书并加强抗压练习。'
+  ];
+  return suggestions[currentStepIndex.value] || suggestions[2];
+});
 
 const chatMessages = ref([
   { id: 1, role: 'assistant', content: '您好！我是您的AI职业向导。您可以直接粘贴简历内容或上传文件。' }
@@ -274,16 +343,28 @@ const handleSend = async () => {
   await scrollToBottom();
 
   // 7. 模拟 AI 回复
-  setTimeout(async () => {
-    chatMessages.value.push({
-      id: Date.now(),
-      role: 'assistant',
-      content: '收到！简历内容/附件已实时分析，画像已更新。',
-      time: new Date().toLocaleTimeString()
-    });
-    loading.value = false;
-    await scrollToBottom();
-  }, 1000);
+  // 🌟 找到原有 handleSend 的 setTimeout 部分并替换
+setTimeout(async () => {
+  // 1. 根据当前步数获取剧本内容，如果超出剧本长度则循环最后一条
+  const step = scriptSteps[currentStepIndex.value] || scriptSteps[scriptSteps.length - 1];
+
+  // 2. 将硬编码的回答推送到聊天列表
+  chatMessages.value.push({
+    id: Date.now(),
+    role: 'assistant',
+    content: step.answer, // 使用剧本里的回答
+    time: new Date().toLocaleTimeString()
+  });
+
+  // 3. 🌟 关键：更新右侧看板所需的数据变量
+  currentRadarData.value = step.radarData;
+
+  // 4. 对话步数加 1
+  currentStepIndex.value++;
+
+  loading.value = false;
+  await scrollToBottom();
+}, 3000); // 稍微延长到 1.2s，模拟 AI 思考和更新画像的过程
 }
 
 const saveAndContinue = () => {
@@ -316,6 +397,64 @@ const handleDeepAnalysis = () => {
     window.location.reload(); 
   });
 };
+
+// 找到 Index.vue 中的 dimensionDetails 部分，替换为以下代码
+const dimensionDetails = computed(() => {
+  // 默认初始状态或第一轮对话的状态
+  const defaultDetails = {
+    "专业技能": { status: "已完善", desc: "会Python编程", type: "success" },
+    "证书": { status: "未提及", desc: "用户未提及此维度", type: "info" },
+    "创新能力": { status: "不清楚", desc: "用户提及但无具体例子", type: "warning" },
+    "学习能力": { status: "未提及", desc: "用户未提及此维度", type: "info" },
+    "抗压能力": { status: "未提及", desc: "用户未提及此维度", type: "info" },
+    "沟通能力": { status: "未提及", desc: "用户未提及此维度", type: "info" },
+    "实习能力": { status: "不清楚", desc: "用户提及但无具体例子", type: "warning" }
+  };
+
+  // 第二轮对话及以后（currentStepIndex >= 2）返回你要求的完整信息
+  const completedDetails = {
+    "专业技能": { 
+      status: "已完善", 
+      desc: "精通Java/Python等开发技术；扎实掌握数据结构与算法", 
+      type: "success" 
+    },
+    "证书": { 
+      status: "已完善", 
+      desc: "持有计算机二级等专业证书", 
+      type: "success" 
+    },
+    "创新能力": { 
+      status: "已完善", 
+      desc: "主导大创项目，运用知识图谱等技术实现创新方案，成果显著；参加过创新创业大赛", 
+      type: "success" 
+    },
+    "学习能力": { 
+      status: "已完善", 
+      desc: "GPA 3.7/4.0，专业排名前10%；自主学习能力强，能快速掌握新技术", 
+      type: "success" 
+    },
+    "抗压能力": { 
+      status: "已完善", 
+      desc: "能高效应对项目攻坚、多任务并行等高压场景，按时高质量完成目标", 
+      type: "success" 
+    },
+    "沟通能力": { 
+      status: "已完善", 
+      desc: "具备优秀跨部门协作与团队统筹能力，高效推进项目落地", 
+      type: "success" 
+    },
+    "实习能力": { 
+      status: "已完善", 
+      desc: "在腾讯实习过，参与企业软件开发全流程，完成功能开发、测试优化，积累扎实工程实践经验", 
+      type: "success" 
+    }
+  };
+
+  // 根据当前对话步数切换显示内容
+  // 因为你在 handleSend 中每次回复后会 currentStepIndex.value++
+  // 初始是 0，第一次回复后是 1，第二次回复后是 2
+  return currentStepIndex.value >= 2 ? completedDetails : defaultDetails;
+});
 </script>
 
 <style scoped lang="scss">
@@ -901,6 +1040,176 @@ const handleDeepAnalysis = () => {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+.artifact-header {
+  display: flex;
+  justify-content: space-between; /* 🌟 关键：将标题推向左边，数值推向右边 */
+  align-items: flex-start;       /* 顶部对齐 */
+  margin-bottom: 20px;
+
+  .completion-status {
+    text-align: right;           /* 文字向右对齐 */
+    
+    .percentage {
+      display: block;
+      font-size: 20px;
+      font-weight: 700;
+      color: #6366f1;            /* 使用你的主题紫色 */
+      line-height: 1;
+    }
+
+    .label {
+      font-size: 11px;
+      color: #94a3b8;            /* 辅助说明文字颜色 */
+      margin-top: 4px;
+      display: block;
+    }
+  }
+}
+
+/* 看板头部完成度 */
+.artifact-card {
+  height: 100%; /* 保持容器高度由父级决定，不被内容撑开 */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; // 确保外层不出现滚动条
+}
+
+/* 🌟 核心：滚动区域样式 */
+.scroll-container {
+  flex: 1; // 自动占满剩余高度
+  overflow-y: auto; // 内容超出时显示滚动条
+  padding-right: 8px; // 为滚动条留出一点空隙，防止遮挡内容
+
+  /* 美化滚动条 (可选) */
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+/* 保持雷达图有固定高度，不会因为滚动而坍塌 */
+.preview-radar-placeholder {
+  height: 300px; 
+  min-height: 300px;
+  width: 100%;
+}
+
+/* 核心亮点标签 */
+.highlight-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+  
+  .glow-tag {
+    border-radius: 6px;
+    background: rgba(99, 102, 241, 0.05);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    color: #6366f1;
+  }
+}
+
+/* AI 建议区域 */
+.ai-suggestions {
+  margin-top: 15px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 12px;
+  border-left: 4px solid #6366f1;
+
+  .suggestion-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 4px;
+  }
+
+  .suggestion-text {
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.5;
+    margin: 0;
+  }
+}
+
+/* 缩小雷达图容器以适应新内容 */
+.preview-radar-placeholder {
+  height: 260px !important; /* 稍微减小高度给文字腾空间 */
+  margin: 10px 0 !important;
+}
+
+.dimension-grid {
+  display: grid;
+  grid-template-columns: 1fr; // 单列布局，如果想两列可以改用 1fr 1fr
+  gap: 10px;
+  margin-top: 15px;
+}
+
+/* 找到 Index.vue 最后的 <style> 部分，替换原本的 .dimension-card 相关样式 */
+.dimension-card {
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 10px;
+  border: 1px solid transparent;
+  transition: all 0.3s ease;
+
+  // 🌟 状态 1：已完善 (绿色)
+  &.success {
+    background: rgba(16, 185, 129, 0.08); // 浅绿背景
+    border-color: rgba(16, 185, 129, 0.2);
+    .dim-status { color: #10b981; }
+    .dim-desc { color: #065f46; }
+  }
+
+  // 🌟 状态 2：不清楚 (橙色)
+  &.warning {
+    background: rgba(245, 158, 11, 0.08); // 浅橙背景
+    border-color: rgba(245, 158, 11, 0.2);
+    .dim-status { color: #f59e0b; }
+    .dim-desc { color: #92400e; }
+  }
+
+  // 🌟 状态 3：未提及 (灰色)
+  &.info {
+    background: rgba(148, 163, 184, 0.08); // 浅灰背景
+    border-color: rgba(148, 163, 184, 0.2);
+    .dim-status { color: #64748b; }
+    .dim-desc { color: #475569; }
+  }
+
+  .dim-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    
+    .dim-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1e293b;
+    }
+    
+    .dim-status {
+      font-size: 12px;
+      font-weight: 700;
+    }
+  }
+
+  .dim-desc {
+    font-size: 12px;
+    line-height: 1.5;
+    margin: 0;
   }
 }
 

@@ -70,7 +70,7 @@
             </div>
             <div class="card-footer">
               <span class="time-stamp">{{ job.time || '1 小时前发布' }}</span>
-              <span class="match-badge">AI 匹配 92%</span>
+              <span class="match-badge">职途无限</span>
             </div>
           </div>
 
